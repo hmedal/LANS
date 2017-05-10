@@ -1,22 +1,26 @@
-# Graph-Simulation-2
-This project is to generate simulated graph from a given graph. This script has strong dependency on the name of the columns, types of the columns and format of the input file. This script can only take csv files as input.
+# Graph-Simulation-4
 
-To run this script Python 2.7 is required along with the following packages: numpy 1.10.4, panda 0.18.0, random, csv, gc (garbage collector), sklearn 0.18.1(cluster, KMeans, kneighbors_graph, scale), Networkx 1.11, sys, subprocess 
+This project is to generate simulated graph from a given graph. This script has strong dependency on the name of the columns, types of the columns and format of the input file.
 
-Before running the script, put the code and the input files in the same folder.	
+This script requires the following softwares:
 
-To run the script with the small dataset (5549 nodes and 12980 edges), run the masterScript with the following command:
-	
-  python masterscript.py "CTU13_5_Sample.csv"
+1. Spark 2.1.0, prebuilt for Hadoop 2.7 and later
 
-To run the script with the large dataset (CTU-13-5 netflow data, contains 41658 nodes and 129832 edges), run the masterscript with the following command:
-	
-  python masterscript.py "CTU13_5.csv"
-  
-  To run the script with a binetflow file for the large dataset (CTU-13-5 netflow data, contains 41658 nodes and 129832 edges), run the masterscript with the following command:
-	
-  python masterscript.py "5.binetflow"
-	
-  This script generates a simulated graph named simulated_graph.csv
-  
-  To run all three of these tests, use the "runTests.sh" script.
+2. R 3.2.1 to generate graph properties.
+
+3. Python 2.7.8 is required along with the following packages: openmpi-1.10, numpy 1.10.4, panda 0.18.0, random, csv, gc (garbage collector), sklearn 0.18.1 (cluster, KMeans, kneighbors_graph, scale), sys, subprocess.
+
+4. The code should be run with at least 4 processors. In this version, each processor is responsible for eah role. So, the minimum number of processors must be equal to the number of roles. (This condition will be removed from the next versions.)
+
+
+# How to run Graph-Simulation-4:
+
+1.	Download "spark-2.1.0-bin-hadoop2.7.tgz" this package from http://spark.apache.org/downloads.html , unzip and save it in your cluster. 
+2.	Make all the files in the "/Spark/..../bin" directory executable (e.g. using command chmod a+x bin).
+3.	Download our project and unzip it.
+4.	Copy all the jar files from the "Required_Packages" directory of our project to "/Spark/..../jars" directory of Spark.
+5.	Copy our project (except "Required_Packages" directory) in the working directory of your cluster.
+6.	Keep all the input files (e.g. 11.binetflow, 5.binetflow and so on) in the "input_files" directory of our project. These input files are used as seed graphs while generating large-scale simulated graph. All the input seed graphs must be inside the "input_files" directory, otherwise the input graphs will not be considered as input.
+7.	Configure Python package, R package and Home directory for Spark in the default configuration file of the cluster.
+8.	Submit job "runProject.pbs" to a cluster.
+9.	When the job ends it will provide the simulated graph in "SimulatedGraph" directory.
