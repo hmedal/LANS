@@ -5,6 +5,7 @@ from sklearn import cluster
 import os
 from os import listdir
 import warnings
+import Read_Params as rp
 warnings.filterwarnings("ignore")
 
 
@@ -12,8 +13,10 @@ def find_all_filenames(path_to_dir):
     filenames = listdir(path_to_dir)
     return filenames
 
-conf_file = open ( 'Configuration.txt',"r" )
-n_clusters = 4
+params = rp.Read_Params().Params
+n_clusters = params['nRole']
+conf_file = open('Configuration.txt',"r")
+
 
 lineList = conf_file.readlines()
 conf_file.close()
