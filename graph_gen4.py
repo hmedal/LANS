@@ -485,7 +485,7 @@ def create_graph(temp_folder,scenario,seed = 0,startpoint = 0):
         for item in each:
             count += 1
             outfile.write(str(item).encode("utf-8"))
-            if(i < 50 and each[-1] == 'flow=Background' and len(each) > 2 and MPI_rank == 0):
+            if(i < 50 and each[-1] != 'flow=Botnet Activity' and len(each) > 2 and MPI_rank == 0):
                 miscfile.write(str(item).encode("utf-8"))
                 if count < len(each):
                     miscfile.write(','.encode("utf-8"))
