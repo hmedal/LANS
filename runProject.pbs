@@ -32,6 +32,6 @@ $SPARK_HOME/bin/spark-submit \
 $(cat Configuration.txt)
 Rscript --vanilla CombineCSV.R
 python role_mining.py
-mpirun -n 40 python parallel_parameter_estimation.py
+mpirun -n 40 python parallel_parameter_estimation_v2.py
 python create_edge_attribute_histograms.py
 mpirun -n 40 python Enterprise_Connection_With_Graph_Simulation.py
