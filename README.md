@@ -10,7 +10,7 @@ This script requires the following softwares:
 
 3. Python 2.7.8 is required along with the following packages: openmpi-1.10, numpy 1.10.4, panda 0.18.0, random, csv, gc (garbage collector), sklearn 0.18.1 (cluster, KMeans, kneighbors_graph, scale), sys, subprocess.
 
-4. The code should be run with at least 4 processors. In this version, each processor is responsible for eah role. So, the minimum number of processors must be equal to the number of roles. (This condition will be removed from the next versions.)
+4. The code should be run with at least 4 processors. In this version, each processor is responsible for one role; so, the minimum number of processors must be equal to the number of roles. (This condition will be removed from the next versions.)
 
 
 # How to run Graph-Simulation-4:
