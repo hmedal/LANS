@@ -1,7 +1,7 @@
 '''
 Created on Feb 7, 2017
 
-@author: tb2038, sh2364
+@author: sh2364, tb2038
 '''
 
 from __future__ import division
@@ -39,7 +39,7 @@ temp_folder += "/temp/"
 #debug_filename = temp_folder + "output_"+str(rank)+".txt"
 #text_file = open(debug_filename, "a")
 
-outputstring = ""
+#outputstring = ""
 
 for f in allFiles:
     Data_file = input_folder+f
@@ -160,8 +160,8 @@ for f in allFiles:
             hist1_2 = np.zeros(s1)
             bins_indegree = []
             bins_outdegree = []
-            print "merge_Indegree_Lst: ", merge_Indegree_Lst
-            print "merge_Outdegree_Lst: ", merge_Outdegree_Lst
+            #print "merge_Indegree_Lst: ", merge_Indegree_Lst
+            #print "merge_Outdegree_Lst: ", merge_Outdegree_Lst
             #outputstring = "merge_Indegree_Lst: " + "\n"
             #text_file.write("%s" % outputstring)
             #text_file.write(merge_Indegree_Lst)
