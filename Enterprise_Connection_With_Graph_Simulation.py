@@ -44,10 +44,10 @@ def main(comm = MPI.COMM_WORLD):
         print(" - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -")
         print("Number of Processors: ", numprocs)
         print(" - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -")
-        org_graphList = find_all_filenames(input_folder)
+        org_graphList = list(find_all_filenames(input_folder))
         graphList = []
         for n in range(numprocs):
-            graphList.append(choice(org_graphList[1:len(org_graphList)]))
+            graphList.append(choice(org_graphList))
 
         startIndex = []
         upperlevelNodes = []
