@@ -24,3 +24,7 @@ This script requires the following softwares:
 7.	Configure Python package, R package and Home directory for Spark in the default configuration file of the cluster.
 8.	Submit job "runProject.pbs" to a cluster.
 9.	When the job ends it will provide the simulated graph in "SimulatedGraph" directory.
+
+# Explanation about Simulation Results:
+
+1. In SimulatedGraph folder, there are a number of csv files created by simulation code. A series of localgen_XX.csv file represent local graphs, which are connected by uppper level graph (upperlevelGraph.csv). All of these graphs consist of a large-scale simulation result. 
