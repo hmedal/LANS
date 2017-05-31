@@ -25,6 +25,7 @@ This script requires the following softwares:
 8.	Submit job "runProject.pbs" to a cluster.
 9.	When the job ends it will provide the simulated graph in "SimulatedGraph" directory.
 
-# Explanation about Simulation Results:
+Results from Graph-Simulation-4
 
-1. In SimulatedGraph folder, there are a number of csv files created by simulation code. A series of localgen_XX.csv file represent local graphs, which are connected by uppper level graph (upperlevelGraph.csv). All of these graphs consist of a large-scale simulation result. 
+When Graph-Simulation-4 is run it will create a new folder named SimulatedGraph. The contents of this folder should be a series of small graphs beginning with "localgen_0.csv" and ending with "localgen_N.csv" where N is the number of local graphs generated - 1. This folder will also contain a file named upperlevelGraph.csv which contains the connections between local graphs which unite all local graphs into a single larger graph.
+In order to verify that the simulation has completed and is correct compare the number of files in the SimulatedGraph folder with the nubmer of processors specified in the PBS script used to run the simulation. If the simulation is complete then all localgen_.csv files and upperlevelGraph.csv should be present and not empty.
