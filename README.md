@@ -25,6 +25,10 @@ This script requires the following softwares:
 8.	Submit job "runProject.pbs" to a cluster.
 9.	When the job ends it will provide the simulated graph in "SimulatedGraph" directory.
 
+# Source code about graph property calculation
+1. In "src" folder, GraphProperties.scala, KCore.scala, and Properties.scala are used to calculate graph properties, which can be compiled into jar file through maven, sbt, or IDE (IntelliJ IDEA). In our project, we used IDEA to create a jar file. 
+2. In some cases, Spark cannot run properly on Shadow. Please terminate the current job and resubmit a new one. 
+
 
 # Results from Graph-Simulation-4
 
