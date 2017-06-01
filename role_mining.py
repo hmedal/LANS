@@ -38,7 +38,7 @@ for f in allFiles:
     data = scale(features)
     n_samples, n_features = data.shape
 
-    predictor = cluster.MiniBatchKMeans(n_clusters=n_clusters)
+    predictor = cluster.MiniBatchKMeans(n_clusters=n_clusters, init='k-means++', max_iter=100, n_init=1, verbose=0, random_state=3425)
     predictor.fit(data)
 
     #predictor = KMeans(init='random', n_clusters=n_clusters, n_init=10)
