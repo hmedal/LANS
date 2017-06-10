@@ -19,15 +19,14 @@ This script requires the following softwares:
 2.	Make all the files in the "/Spark/..../bin" directory executable (e.g. using command chmod a+x bin).
 3.	Download our project and unzip it.
 4.	Copy all the jar files from the "Required_Packages" directory of our project to "/Spark/..../jars" directory of Spark.
-5.	Copy our project (except "Required_Packages" directory) in the working directory of your cluster.
+5.	Copy our project (except "Required_Packages" directory) in the working directory of your cluster. Compile src/GraphProperties.scala, src/KCore.scala, and src/Properties.scala to /Spark/.../jars/Properties.jar.
 6.	Keep all the input files (e.g. 11.binetflow, 5.binetflow and so on) in the "input_files" directory of our project. These input files are used as seed graphs while generating large-scale simulated graph. All the input seed graphs must be inside the "input_files" directory, otherwise the input graphs will not be considered as input.
 7.	Configure Python package, R package and Home directory for Spark in the default configuration file of the cluster.
 8.	Submit job "runProject.pbs" to a cluster.
 9.	When the job ends it will provide the simulated graph in "SimulatedGraph" directory.
 
 # Source code about graph property calculation
-1. In "src" folder, GraphProperties.scala, KCore.scala, and Properties.scala are used to calculate graph properties, which can be compiled into jar file through maven, sbt. 
-2. In some cases, Spark cannot run properly on Shadow. Please terminate the current job and resubmit a new one. 
+1. In some cases, Spark cannot run properly on Shadow. Please terminate the current job and resubmit a new one. 
 
 
 # Results from Graph-Simulation-4
