@@ -1,4 +1,4 @@
-# Graph-Simulation-4
+# About Graph-Simulation
 
 This project is to generate simulated graph from a given graph. This script has strong dependency on the name of the columns, types of the columns and format of the input file.
 
@@ -13,7 +13,7 @@ This script requires the following softwares:
 4. The code should be run with at least 4 processors. In this version, each processor is responsible for one role; so, the minimum number of processors must be equal to the number of roles. (This condition will be removed from the next versions.)
 
 
-# How to run Graph-Simulation-4:
+# How to run Graph-Simulation:
 
 1.	Download "spark-2.1.0-bin-hadoop2.7.tgz" this package from http://spark.apache.org/downloads.html , unzip and save it in your cluster. 
 2.	Make all the files in the "/Spark/..../bin" directory executable (e.g. using command chmod a+x bin).
@@ -25,11 +25,8 @@ This script requires the following softwares:
 8.	Submit job "runProject.pbs" to a cluster.
 9.	When the job ends it will provide the simulated graph in "SimulatedGraph" directory.
 
-# Source code about graph property calculation
-1. In some cases, Spark cannot run properly on Shadow. Please terminate the current job and resubmit a new one. 
 
-
-# Results from Graph-Simulation-4
+# Expected Results
 
 1. When Graph-Simulation-4 is run it will create a new folder named SimulatedGraph. The contents of this folder should be a series of small graphs beginning with "localgen_0.csv" and ending with "localgen_N.csv" where N is the number of local graphs generated - 1. This folder will also contain a file named upperlevelGraph.csv which contains the connections between local graphs which unite all local graphs into a single larger graph.
 2. In order to verify that the simulation has completed and is correct compare the number of files in the SimulatedGraph folder with the number of processors specified in the PBS script used to run the simulation. If the simulation is complete then all localgen_.csv files and upperlevelGraph.csv should be present and not empty.
