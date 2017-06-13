@@ -18,6 +18,7 @@ def to_edge(temp_folder,source, dest):
         tempar.append(each)
     ran = random.randint(0,len(tempar)-1)
     line = tempar[ran].strip('\n').split(',')
+    #print "line: ", line
     line[0] = str(source)
     line[1] = str(dest)
     st = ''
