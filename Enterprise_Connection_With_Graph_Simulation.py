@@ -2,7 +2,7 @@ __author__ = 'fz56@msstate.edu'
 __author__ = 'chrisl@dasi.msstate.edu'
 
 import networkx as nx
-from random import choice, shuffle, seed, sample
+from random import choice, shuffle, seed, sample, randint
 from mpi4py import MPI
 import datetime as dt
 from itertools import chain
@@ -14,6 +14,8 @@ from graph_gen4 import to_edge
 import heapq
 import sys
 import os
+import time
+import json
 from os import listdir
 
 
@@ -29,7 +31,14 @@ def main(comm = MPI.COMM_WORLD):
     conf_file = open ('Configuration.txt',"r")
     lineList = conf_file.readlines()
     conf_file.close()
+
     input_folder = lineList[-1]+"/input_files/"
+    with open(lineList[-1]+"/params.json") as json_file:
+        data = json.load(json_file)
+        if(data["seed"] == -1):
+            data["seed"] = time
+        seed(data["seed"])
+
     output_folder = os.path.dirname(os.path.dirname(input_folder))
     output_folder += "/SimulatedGraph/"
     try:
@@ -45,10 +54,12 @@ def main(comm = MPI.COMM_WORLD):
         print("Number of Processors: ", numprocs)
         print(" - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -")
         org_graphList = list(find_all_filenames(input_folder))
+        
         graphList = []
+        seedlist = []
         for n in range(numprocs):
+            seedlist.append(randint(1,10000))
             graphList.append(choice(org_graphList))
-
         startIndex = []
         upperlevelNodes = []
         count = 0
@@ -58,15 +69,16 @@ def main(comm = MPI.COMM_WORLD):
             count += get_size(e, temp_folder)
             startIndex.append(count)
             upperlevelNodes.extend(sample(range(startIndex[-2], startIndex[-1]), 3))
-
     else:
         startIndex = None
         graphList = None
+        seedlist = None
 
     startIndex = comm.bcast(startIndex, root=0)
     graphList = comm.bcast(graphList, root=0)
+    seedlist = comm.bcast(seedlist, root=0)
 
-    create_graph(temp_folder,graphList[rank],startpoint = startIndex[rank])
+    create_graph(temp_folder,graphList[rank], seed = seedlist[rank], startpoint = startIndex[rank])
 
     if rank == 0:
         #overallGraph = nx.MultiDiGraph()
@@ -95,7 +107,7 @@ def main(comm = MPI.COMM_WORLD):
 
 if __name__ == "__main__":
 
-    print("---------------------------")
+    #print("---------------------------")
     startTime = dt.datetime.now ()
     #print('begin', startTime)
     #fileName = "CTU13_5.graphml" # this indicates input graph
