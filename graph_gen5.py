@@ -588,6 +588,3 @@ if __name__ == "__main__":
     TF = "/work/fz56/Graph-Simulation-4-master/newfolder/"
     create_graph(TF,"5",seed=0)
     print(time.time() - start)
-    #comm = mpi4py.MPI.COMM_WORLD
-    #MPI_size = comm.Get_size()
-    #MPI_rank = comm.Get_rank()
