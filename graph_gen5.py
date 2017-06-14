@@ -16,7 +16,7 @@ def get_histograms(scenario,input_folder, at_list):
     hist_list = dict()
     hist_list['at_list'] = at_list
     for obj in at_list:
-        fname = input_folder + obj +scenario+".txt"
+        fname = input_folder + obj+"_" +scenario+".txt"
         hists = open(fname,'r')
         contents = dict()
         count = 0
@@ -584,7 +584,10 @@ if __name__ == "__main__":
 
     start = time.time()
     #create_graph("5",startpoint=0)
-    #TF = "C:\\Users\\Chris\\Desktop\\test files\\new folder\\temp\\"
-    TF = "/work/fz56/Graph-Simulation-4-master/newfolder/"
+    TF = "C:\\Users\\Chris\\Desktop\\GraphSimulation5\\temp\\"
+    #TF = "/work/fz56/Graph-Simulation-4-master/newfolder/"
     create_graph(TF,"5",seed=0)
     print(time.time() - start)
+    #comm = mpi4py.MPI.COMM_WORLD
+    #MPI_size = comm.Get_size()
+    #MPI_rank = comm.Get_rank()
