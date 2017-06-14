@@ -11,8 +11,8 @@ innodes = []
 outnodes = []
 
 
-def get_histograms(scenario,input_folder):
-    at_list = ["Proto","StartTime","Dur","Sport","Dir","Dport","State","sTos","dTos","TotPkts","TotBytes","Label"]
+def get_histograms(scenario,input_folder, at_list):
+    
     hist_list = dict()
     hist_list['at_list'] = at_list
     for obj in at_list:
@@ -37,7 +37,7 @@ def get_histograms(scenario,input_folder):
     return hist_list
 
 
-def to_edge(temp_folder,source, dest):
+def to_edge(temp_folder, source, dest):
     fsource = open(temp_folder +'samples.csv','r')
     tempar = []
     for each in fsource:
@@ -194,18 +194,44 @@ def generate_node(h,r,degree_array,len_deg_ar,TM):
             i += 1
     indeg = [degree_array[r][i][0]]
     outdeg = [degree_array[r][i][1]]
-    indeg.append(degree_array[r][len(degree_array[r])-1][0]/len_deg_ar + indeg[0])
-    outdeg.append(degree_array[r][len(degree_array[r])-1][1]/len_deg_ar + outdeg[0])
+    if (i+1) % len_deg_ar == 0:
+        outdeg.append(degree_array[r][i][1])
+    elif i % len_deg_ar == 0:
+        outdeg.append(degree_array[r][i][1])
+    else:
+        outdeg.append(degree_array[r][i+1][1])
+    if i + len_deg_ar >= len(degree_array):
+        indeg.append(degree_array[r][i][0])
+    else:
+        indeg.append(degree_array[r][i+len_deg_ar][0])
+
+    #indeg.append(degree_array[r][len(degree_array[r])-1][0]/len_deg_ar + indeg[0])
+    #outdeg.append(degree_array[r][len(degree_array[r])-1][1]/len_deg_ar + outdeg[0])
     if int(indeg[0]) == int(indeg[1]):
         indeg = int(indeg[0])
-    else:
+    elif(int(indeg[0] + 1) == int(indeg[1])):
         indeg = random.randint(int(indeg[0]),int(indeg[1]))
+    else:
+        indeg = random.randint(int(indeg[0]),int(indeg[1] - 1 ))
     if int(outdeg[0]) == int(outdeg[1]):
         outdeg = int(outdeg[0])
     else:
-        outdeg = random.randint(int(outdeg[0]),int(outdeg[1]))
+        if int(outdeg[1]) - int(outdeg[0]) > 1:
+            outdeg[1] -= 1
+        try:
+            outdeg = random.randint(int(outdeg[0]),int(outdeg[1]))
+        except Exception:
+            print "failure generating node:"
+            print "outdegree range :",outdeg
+            print "value inside histogram:",i
+            print "Buckets Per histogram subsection:",len_deg_ar
+            print "bucket base:", degree_array[r][i]
+            print "bucket max:",degree_array[r][i+1][1]
+
+            sys.exit(1)
     if indeg == 0 and outdeg == 0:
         outdeg = 1
+
     return [l + 1,startrole,indeg,outdeg]
 
 
@@ -272,12 +298,13 @@ def generate_edge(f,TM,nodes):
 
 
 def add_edge(b,c,temparray,attribute_histograms,srole,drole,mal_role):
+
     d,warn = attributes(attribute_histograms,srole,drole)
-    oth = set_attr(temparray)
-    ret = [b,c,d]
-    for each in oth:
-        for item in each:
-            ret.append(item)
+    #oth = set_attr(temparray)
+    d = d.split(",")
+    ret = [b,c]
+    for each in d:
+        ret.append(each)
     if('otnet' in ret[-1] or 'alicious' in ret[-1]):
         ret[-1] = 'flow = background'
     if(srole == mal_role):
@@ -287,8 +314,11 @@ def add_edge(b,c,temparray,attribute_histograms,srole,drole,mal_role):
 
 def create_graph(temp_folder,scenario,seed = 0,startpoint = 0):
     fname = scenario.split('.')
+    infilename = "_" + scenario
     scenario = ''
     count = 1
+    if len(fname) == 1:
+        scenario = fname[0]
     for each in fname:
         if count < len(fname):
             scenario = scenario + each
@@ -298,9 +328,10 @@ def create_graph(temp_folder,scenario,seed = 0,startpoint = 0):
     random.seed(seed)
     roles = 0
     input_folder = os.path.dirname(os.path.dirname(temp_folder))
-    #input_folder += "/input_files/"
-    input_folder += "\\temp\\"
-    attribute_histograms = get_histograms(scenario,input_folder)
+    input_folder += "/input_files/"
+    #input_folder += "\\temp\\"
+    at_list = ["Proto","StartTime","Dur","Sport","Dir","Dport","State","sTos","dTos","TotPkts","TotBytes","Label"]
+    attribute_histograms = get_histograms(infilename,temp_folder, at_list)
     #print attribute_histograms['at_list']
     #sys.exit(0)
     mal_role = temp_folder+ "malicious_role" +scenario + ".txt"
@@ -308,7 +339,7 @@ def create_graph(temp_folder,scenario,seed = 0,startpoint = 0):
     for each in mal_role:
         mal_role = int(each)
         break
-    name_inputfile = input_folder+ scenario + "." + fname[-1]#name_inputfile = "" + scenario + "." + fname[-1]
+    name_inputfile = input_folder+ scenario #+ "." + fname[-1]#name_inputfile = "" + scenario + "." + fname[-1]
     OF = open(name_inputfile, 'r')
     temparray = []
     count = 0
@@ -442,6 +473,7 @@ def create_graph(temp_folder,scenario,seed = 0,startpoint = 0):
     degree_array = []
     gc.collect()
     count = 1
+    total = 0
     for each in nodes:
         for item in each:
             item[0] = count
@@ -512,12 +544,12 @@ def create_graph(temp_folder,scenario,seed = 0,startpoint = 0):
     MPI_rank = comm.Get_rank()
     #name_outputfile = "SimulatedGraph/localgen_" + str(MPI_rank)+'.csv'
     name_outputfile = os.path.dirname(os.path.dirname(temp_folder))
-    #name_outputfile = name_outputfile + "/SimulatedGraph/localgen_" + str(MPI_rank)+'.csv'
-    name_outputfile = name_outputfile + "\\SimulatedGraph\\localgen_" + str(MPI_rank)+'.csv'
+    name_outputfile = name_outputfile + "/SimulatedGraph/localgen_" + str(MPI_rank)+'.csv'
+    #name_outputfile = name_outputfile + "\\SimulatedGraph\\localgen_" + str(MPI_rank)+'.csv'
     outfile = open(name_outputfile, 'wb')
-    topline = ""
-    for each in temparray[0]:
-        topline = topline + each.strip('\n') + ','
+    topline = "source,destination,"
+    for each in at_list:
+        topline = topline + each + ","
     outfile.write((topline + '\n').encode("utf-8"))
     count = 0
     miscfile = open(temp_folder+'samples.csv','wb')
@@ -526,7 +558,7 @@ def create_graph(temp_folder,scenario,seed = 0,startpoint = 0):
         for item in each:
             count += 1
             outfile.write(str(item).encode("utf-8"))
-            if(i < 50 and each[-1] == 'flow=Background' and len(each) > 2 and MPI_rank == 0):
+            if(i < 50 and each[-1] != 'flow=Botnet Activity' and len(each) > 2 and MPI_rank == 0):
                 miscfile.write(str(item).encode("utf-8"))
                 if count < len(each):
                     miscfile.write(','.encode("utf-8"))
@@ -539,24 +571,22 @@ def create_graph(temp_folder,scenario,seed = 0,startpoint = 0):
                 outfile.write('\n'.encode("utf-8"))
                 count = 0
     LOC = os.path.dirname(os.path.dirname(temp_folder))
-    #warn = open(LOC+'/Warning_File.txt',"wb")
-    warn = open(LOC+'\\SimulatedGraph\\Warning_File.txt',"w")
+    warn = open(LOC+'/Warning_File.txt',"wb")
+    #warn = open(LOC+'\\SimulatedGraph\\Warning_File.txt',"w")
     if warn_flag == True:
         warn.write("WARNING\n")
         warn.write("detected edge connection between unanticipated roles or missing histogram\n")
         warn.write("edge attributes have been randomly assigned from existing histograms for any such connections\n")
     else:
         warn.write("generation complete with no warnings")
-    print len(edgelist)
-
-
-
+    #print len(edgelist)
 if __name__ == "__main__":
 
     start = time.time()
-    #create_graph("CTU_5",startpoint=0)
-    TF = "C:\\Users\\Chris\\PycharmProjects\\untitled\\testing\\temp\\"
-    create_graph(TF,"5.csv",seed=1)
+    #create_graph("5",startpoint=0)
+    #TF = "C:\\Users\\Chris\\Desktop\\test files\\new folder\\temp\\"
+    TF = "/work/fz56/Graph-Simulation-4-master/newfolder/"
+    create_graph(TF,"5",seed=0)
     print(time.time() - start)
     #comm = mpi4py.MPI.COMM_WORLD
     #MPI_size = comm.Get_size()
