@@ -29,8 +29,8 @@ fixed_str = "$SPARK_HOME/bin/spark-submit \\"\
       +"\n"+"--master spark://$SPARK_MASTER_IP:7077 \\"\
       +"\n"+"--deploy-mode client \\"\
       +"\n"+"--class Properties \\"\
-      +"\n"+"--executor-cores 20 \\"\
-      +"\n"+"--executor-memory 480g \\"
+      +"\n"+"--executor-cores 5 \\"\
+      +"\n"+"--executor-memory 120g \\"
 
 conf_file.write(init_str)
 for f in all_input_files:
