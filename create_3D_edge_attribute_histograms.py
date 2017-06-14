@@ -10,7 +10,6 @@ import mpi4py
 from mpi4py import MPI
 warnings.simplefilter('ignore', category=FutureWarning)
 
-## Initialize multithreading
 comm = mpi4py.MPI.COMM_WORLD
 w = comm.Get_rank()
 w = int(w)
@@ -25,15 +24,15 @@ lineList = conf_file.readlines()
 conf_file.close()
 filePrefix = lineList[-1]+"/input_files/"
 
-## Comment out this line for Shadow submission (testing purposes only)
+## Comment out this line for Shadow submission
 #filePrefix = "C:/Users/Jonathan/Dropbox/HPDA_Simulation_Project/code/Edge attributes/Test Files/input_files/"
 
-## Get a list of input files from the /temp/ folder
+## Get a list of filenames from the files in the directory
 ctu_files = find_csv_filenames(filePrefix)
 temp_folder = os.path.dirname(os.path.dirname(filePrefix))
 temp_folder += "/temp/"
 
-## Create identifiers to find role information files
+## Assign role file names
 role_files = []
 for f in ctu_files:
 	role_files.append(f)
@@ -42,58 +41,52 @@ for f in role_files:
 	role_files[i] = 'role_information' + "".join(itertools.takewhile(str.isdigit, f)) + '.csv'
 	i = i + 1
 
-## Exit if not enough processors were assigned for the number of input files
 if w >= len(ctu_files):
 	sys.exit(0)
 
-## Read input files into pandas (pd) for manipulation
+# Read files into pandas (pd)
 ctu_pd = pd.read_csv(filePrefix + ctu_files[w])
 roles_pd = pd.read_csv(temp_folder + role_files[w])
 
-## Get list of attributes from the CTU file
+# Get list of attributes
 attributes = list(ctu_pd)
 
-## Get list of role numbers from the role file
+# Get list of role numbers
 role_attribute = roles_pd['Role']
 role_count = role_attribute.value_counts()
 role_numbers = role_count.index.tolist()
 
-## Create a text file for each attribute
+# Create a text file for each attribute
 i = 0
 for x in attributes:
-    if(attributes[i] != 'SrcAddr' and attributes[i] != 'DstAddr' and attributes[i] != 'sTos' and attributes[i] != 'dTos' and attributes[i] != 'State'):
-	    text_file = open(temp_folder + attributes[i] + '_' + re.search('\d+', role_files[w]).group() + '.txt', 'w')
-	    text_file.close()
-    i = i + 1
 
-## This section saves time by creating a combined file for a dataset and role information pair
-## Once a combined file has been created it does not need to be created again
-## This dramatically reduces compute time for pairs that have already been run at least once
+	text_file = open(temp_folder + attributes[i] + '_' + re.search('\d+', role_files[w]).group() + '.txt', 'w')
+	text_file.close()
+	i = i + 1
 
-## Check to see if a combined file exists
-## If not, then create one by combining the two input files
+# Check to see if the combined file already exists
+# If it doesn't exist, then create it by combining the two source files
 if not os.path.exists(temp_folder + 'merged_dataframe_' + ctu_files[w].split('.', 1)[0] + '.csv'):
-	## Create empty columns for our roles
+	# Create empty columns for our roles
 	ctu_pd['SrcRole'] = ''
 	ctu_pd['DstRole'] = ''
 	i = 0
 	number_of_rows = len(ctu_pd.index)
 	while i < number_of_rows:
-		## Assign the corresponding role numbers for SrcAddr & DstAddr to SrcRole & DstRole
+		# Assign the corresponding role numbers for SrcAddr & DstAddr to SrcRole & DstRole
 		SrcRole = roles_pd.loc[roles_pd['Node'] == ctu_pd['SrcAddr'].iloc[i]]
 		SrcRole = SrcRole['Role'].iloc[0]
 		ctu_pd['SrcRole'].iloc[i] = SrcRole
 		DstRole = roles_pd.loc[roles_pd['Node'] == ctu_pd['DstAddr'].iloc[i]]
 		DstRole = DstRole['Role'].iloc[0]
 		ctu_pd['DstRole'].iloc[i] = DstRole
-		## Display a counter on the screen to indicate program is running
 		print i
 		i = i + 1
 	print 'Combined file created'
-	## Output the combined dataframe to a .csv
-	ctu_pd.to_csv('merged_dataframe_' + ctu_files[w])
+	# Output the combined dataframe to a .csv
+	ctu_pd.to_csv(temp_folder +'merged_dataframe_' + ctu_files[w])
 
-## Open the csv for next part (creating histograms)
+# Open the csv for next part
 merged_df = pd.read_csv(temp_folder + 'merged_dataframe_' + ctu_files[w].split('.', 1)[0] + '.csv')
 
 i = 0
@@ -101,21 +94,18 @@ j = 0
 k = 0
 for x in role_numbers:
 	for y in role_numbers:
-		## Only look at i -> j 
+		# Only look at i -> j 
 		data_slice = merged_df.loc[merged_df['SrcRole'] == role_numbers[i]]
 		data_slice = data_slice.loc[data_slice['DstRole'] == role_numbers[j]]
 		
-		## Create and process histograms
+		# Create and process histograms
 		for z in attributes:
 			attribute = attributes[k]
 			
-			## Each unique value and the number of times it appears
+			# Each unique value and the number of times it appears
 			counts = data_slice[attribute].value_counts()
-			## Number of unique values
+			# Number of unique values
 			number_unique = len(counts.index)
-			## Go to next attribute if the histogram would be empty
-			if (number_unique == 0):
-				continue
 			
 			## Process data differently depending on which attribute it is
 			if(attribute == 'StartTime'):
@@ -129,25 +119,23 @@ for x in role_numbers:
 				data = data_slice[attribute].convert_objects(convert_numeric='force')
 			elif(attribute == 'Dur' or attribute == 'TotPkts' or attribute == 'TotBytes' or attribute == 'SrcBytes'):
 				data = data_slice[attribute].astype(float)
-			elif(attribute == 'Dir' or attribute == 'Proto' or attribute == 'Label'):
+			elif(attribute == 'Dir' or attribute == 'Proto'):
 				data = data_slice[attribute]
 			else:
 				## Ignore the unwanted attribute and continue the loop
 				k = k + 1
 				continue
 				   
-			## Put it into buckets if there are more than x unique values
+			## Put it into buckets if there are more than 'x' unique values
 			x = 100 
 			if number_unique > x:            
 				## Put data into buckets
 				bucket_size = 100
 				while True:
-					if(attribute == 'Label'):
-						break
 					try:
 						data = pd.qcut(data, bucket_size).value_counts()
 					except ValueError:
-						## Decrease bucket size and try again until it fits
+						## Decrease bucket size  and try again until it fits
 						bucket_size = bucket_size - 1
 						continue
 					break
@@ -158,6 +146,7 @@ for x in role_numbers:
 					probabilities.append((float(item) / np.sum(data)))
 											
 				## Append histogram to .txt file
+				#print (attribute + '_' + str(role_numbers[i]))
 				text_file = open(temp_folder + attribute + '_' + ctu_files[w].split('.', 1)[0] + '.txt', 'a')
 				text_file.write(str(role_numbers[i]))
 				text_file.write('->')
@@ -173,12 +162,13 @@ for x in role_numbers:
 				text_file.close()
 				
 			else:
-				## Calculate distribution probabilities for non-bucketed items
+				#Calculate distribution probabilities for non-bucketed items
 				probabilities = []
 				for item in counts:
 					probabilities.append((float(item) / len(data_slice.index)))
 				
-				## Append histogram to .txt file
+				# Append histogram to .txt file
+				#print (attribute + '_' + str(role_numbers[i]))
 				text_file = open(temp_folder + attribute + '_' + ctu_files[w].split('.', 1)[0] + '.txt', 'a')
 				text_file.write(str(role_numbers[i]))
 				text_file.write('->')

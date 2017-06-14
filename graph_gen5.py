@@ -331,7 +331,7 @@ def create_graph(temp_folder,scenario,seed = 0,startpoint = 0):
     input_folder += "/input_files/"
     #input_folder += "\\temp\\"
     at_list = ["Proto","StartTime","Dur","Sport","Dir","Dport","State","sTos","dTos","TotPkts","TotBytes","Label"]
-    attribute_histograms = get_histograms(infilename,temp_folder, at_list)
+    attribute_histograms = get_histograms(scenario,temp_folder, at_list)
     #print attribute_histograms['at_list']
     #sys.exit(0)
     mal_role = temp_folder+ "malicious_role" +scenario + ".txt"
