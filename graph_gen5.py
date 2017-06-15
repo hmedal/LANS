@@ -339,7 +339,10 @@ def create_graph(temp_folder,scenario,seed = 0,startpoint = 0):
     for each in mal_role:
         mal_role = int(each)
         break
-    name_inputfile = input_folder+ scenario #+ "." + fname[-1]#name_inputfile = "" + scenario + "." + fname[-1]
+    if len(fname) > 1:
+        name_inputfile = input_folder+ scenario + "." + fname[-1]#name_inputfile = "" + scenario + "." + fname[-1]
+    else:
+        name_inputfile = input_folder+ scenario
     OF = open(name_inputfile, 'r')
     temparray = []
     count = 0
