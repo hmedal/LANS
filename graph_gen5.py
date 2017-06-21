@@ -312,7 +312,7 @@ def add_edge(b,c,temparray,attribute_histograms,srole,drole,mal_role):
     return ret,warn
 
 
-def create_graph(temp_folder,scenario,seed = 0,startpoint = 0):
+def setup_and_files(temp_folder,scenario,seed):
     fname = scenario.split('.')
     infilename = "_" + scenario
     scenario = ''
@@ -328,8 +328,8 @@ def create_graph(temp_folder,scenario,seed = 0,startpoint = 0):
     random.seed(seed)
     roles = 0
     input_folder = os.path.dirname(os.path.dirname(temp_folder))
-    input_folder += "/input_files/"
-    #input_folder += "\\temp\\"
+    #input_folder += "/input_files/"
+    input_folder += "\\input_files\\"
     at_list = ["Proto","StartTime","Dur","Sport","Dir","Dport","State","sTos","dTos","TotPkts","TotBytes","Label"]
     attribute_histograms = get_histograms(scenario,temp_folder, at_list)
     #print attribute_histograms['at_list']
@@ -372,6 +372,10 @@ def create_graph(temp_folder,scenario,seed = 0,startpoint = 0):
             iterator = 0
         count += 1
     histfile.close()
+    return at_list,attribute_histograms,mal_role,temparray,TPM,degree_array
+
+
+def setup_and_files_cont(degree_array,TPM):
     count = 0
     iterator = 0
     TA = []
@@ -386,8 +390,6 @@ def create_graph(temp_folder,scenario,seed = 0,startpoint = 0):
         count += 1
     lendegar = int(degree_array[0])
     degree_array = TA
-    TA = []
-    gc.collect()
     count = float(0.0)
     iterator = 0
     for each in degree_array:
@@ -427,7 +429,6 @@ def create_graph(temp_folder,scenario,seed = 0,startpoint = 0):
             count = 0
             i += 1
     TPM.close()
-    gc.collect()
     tp = []
     for each in GI:
         x = each.strip(',')
@@ -458,6 +459,10 @@ def create_graph(temp_folder,scenario,seed = 0,startpoint = 0):
         x = GI[(len(GI)-1-roles+count)]
         a[count] = int(float(x))
         count += 1
+    return roles,TM,degree_array,a,lendegar,GI
+
+
+def node_creation(roles,TM,degree_array,lendegar,a,startpoint,GI):
     count = 0
     role = 0
     nodes = []
@@ -482,7 +487,6 @@ def create_graph(temp_folder,scenario,seed = 0,startpoint = 0):
             item[0] = count
             count += 1
     count = 0
-    edgelist = []
     for each in nodes:
         for item in each:
             count += 1
@@ -515,6 +519,12 @@ def create_graph(temp_folder,scenario,seed = 0,startpoint = 0):
                 if int(item[3]) == 0:
                     outnodes[count].remove(item)
         count += 1
+    return nodes,innodes,outnodes,RPM
+
+
+def edge_creation(RPM,TM,nodes,temparray,attribute_histograms,mal_role,innodes,outnodes):
+
+    edgelist = []
     count = 0
     flag = 0
     warn = False
@@ -543,12 +553,16 @@ def create_graph(temp_folder,scenario,seed = 0,startpoint = 0):
             if len(each) > 0:
                 flag = 0
         count += 1
+    return edgelist,warn_flag
+
+
+def write_graph_to_file(temp_folder,at_list,edgelist):
     comm = mpi4py.MPI.COMM_WORLD
     MPI_rank = comm.Get_rank()
     #name_outputfile = "SimulatedGraph/localgen_" + str(MPI_rank)+'.csv'
     name_outputfile = os.path.dirname(os.path.dirname(temp_folder))
-    name_outputfile = name_outputfile + "/SimulatedGraph/localgen_" + str(MPI_rank)+'.csv'
-    #name_outputfile = name_outputfile + "\\SimulatedGraph\\localgen_" + str(MPI_rank)+'.csv'
+    #name_outputfile = name_outputfile + "/SimulatedGraph/localgen_" + str(MPI_rank)+'.csv'
+    name_outputfile = name_outputfile + "\\SimulatedGraph\\localgen_" + str(MPI_rank)+'.csv'
     outfile = open(name_outputfile, 'wb')
     topline = "source,destination,"
     for each in at_list:
@@ -573,16 +587,35 @@ def create_graph(temp_folder,scenario,seed = 0,startpoint = 0):
             else:
                 outfile.write('\n'.encode("utf-8"))
                 count = 0
+
+
+def write_warning_file(temp_folder,warn_flag):
     LOC = os.path.dirname(os.path.dirname(temp_folder))
-    warn = open(LOC+'/Warning_File.txt',"wb")
-    #warn = open(LOC+'\\SimulatedGraph\\Warning_File.txt',"w")
+    #warn = open(LOC+'/Warning_File.txt',"wb")
+    warn = open(LOC+'\\SimulatedGraph\\Warning_File.txt',"w")
     if warn_flag == True:
         warn.write("WARNING\n")
         warn.write("detected edge connection between unanticipated roles or missing histogram\n")
         warn.write("edge attributes have been randomly assigned from existing histograms for any such connections\n")
     else:
         warn.write("generation complete with no warnings")
-    #print len(edgelist)
+
+
+def create_graph(temp_folder,scenario,seed = 0,startpoint = 0):
+
+    at_list,attribute_histograms,mal_role,temparray,TPM,degree_array = setup_and_files(temp_folder,scenario,seed)
+
+    roles,TM,degree_array,a,lendegar,GI = setup_and_files_cont(degree_array,TPM)
+
+    nodes,innodes,outnodes,RPM = node_creation(roles,TM,degree_array,lendegar,a,startpoint,GI)
+
+    edgelist,warn_flag= edge_creation(RPM,TM,nodes,temparray,attribute_histograms,mal_role,innodes,outnodes)
+
+    write_graph_to_file(temp_folder,at_list,edgelist)
+
+    write_warning_file(temp_folder,warn_flag)
+
+
 if __name__ == "__main__":
 
     start = time.time()
