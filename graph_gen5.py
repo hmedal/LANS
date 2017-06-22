@@ -1,11 +1,11 @@
 import random
 import time
-import gc
 import ast
 import mpi4py
 from mpi4py import MPI
 import os
 import sys
+import gc
 
 innodes = []
 outnodes = []
@@ -463,23 +463,31 @@ def setup_and_files_cont(degree_array,TPM):
 
 
 def node_creation(roles,TM,degree_array,lendegar,a,startpoint,GI):
+
+	# this function creates the list of nodes (vertices) for the graph including the in and out degree and assigned role
     count = 0
     role = 0
     nodes = []
     startpos = []
+    gc.collect()
+	# generate a list of lists to contain the nodes 
+	# each role gets it's own list of member nodes
     while count < roles:
         startpos.append(setstart(count,TM))
         count += 1
     count = 0
+	#generate the nodes to fill the required number for each role
     while role < roles:
         nodes.append([])
         while count < a[role]:
             nodes[role].append(generate_node(nodes,role,degree_array,lendegar,TM))
             count += 1
+            if count % 10000 == 0:
+                print count
         role += 1
         count = 0
+		
     degree_array = []
-    gc.collect()
     count = 1
     total = 0
     for each in nodes:
@@ -503,6 +511,8 @@ def node_creation(roles,TM,degree_array,lendegar,a,startpoint,GI):
         RPM.append(o)
 
     count = 0
+	# these loops create the indegree and outdegree objects that are used to determine where edges when they are generated
+	# they also delete any entries that have a zero for the associated degree so that node will not be used in the associated direction
     for each in nodes:
         outnodes.append(each[:])
         innodes.append(each[:])
@@ -522,13 +532,15 @@ def node_creation(roles,TM,degree_array,lendegar,a,startpoint,GI):
     return nodes,innodes,outnodes,RPM
 
 
-def edge_creation(RPM,TM,nodes,temparray,attribute_histograms,mal_role,innodes,outnodes):
+def edge_creation(RPM,TM,nodes,temparray,attribute_histograms,mal_role):
 
+	# this function generates the edgelist that will become the final graph when written to file
     edgelist = []
     count = 0
     flag = 0
     warn = False
     warn_flag = False
+	# this loop continues until the total remaining outdegree is equal to zero
     while flag != 1:
         role = 0
         x = float(random.randint(0,99999999))
@@ -548,6 +560,7 @@ def edge_creation(RPM,TM,nodes,temparray,attribute_histograms,mal_role,innodes,o
             edgelist.append(edge)
         flag = 1
         if warn == True:
+            # this is set for indication of whether the warning file needs to contain a warning or an all clear message
             warn_flag = True
         for each in outnodes:
             if len(each) > 0:
@@ -557,12 +570,15 @@ def edge_creation(RPM,TM,nodes,temparray,attribute_histograms,mal_role,innodes,o
 
 
 def write_graph_to_file(temp_folder,at_list,edgelist):
+    # this function creates the graph file and 
     comm = mpi4py.MPI.COMM_WORLD
     MPI_rank = comm.Get_rank()
     #name_outputfile = "SimulatedGraph/localgen_" + str(MPI_rank)+'.csv'
     name_outputfile = os.path.dirname(os.path.dirname(temp_folder))
     #name_outputfile = name_outputfile + "/SimulatedGraph/localgen_" + str(MPI_rank)+'.csv'
     name_outputfile = name_outputfile + "\\SimulatedGraph\\localgen_" + str(MPI_rank)+'.csv'
+	
+    # starts the graph file with a header for identification of collumns 
     outfile = open(name_outputfile, 'wb')
     topline = "source,destination,"
     for each in at_list:
@@ -571,6 +587,7 @@ def write_graph_to_file(temp_folder,at_list,edgelist):
     count = 0
     miscfile = open(temp_folder+'samples.csv','wb')
     i = 0
+	#this series of loops writes the graph to a file and also creates a samples file for enterprise connection
     for each in edgelist:
         for item in each:
             count += 1
@@ -590,6 +607,7 @@ def write_graph_to_file(temp_folder,at_list,edgelist):
 
 
 def write_warning_file(temp_folder,warn_flag):
+	# writes a warning file that indicates whether indgree ran out or if there has been an error with histograms
     LOC = os.path.dirname(os.path.dirname(temp_folder))
     #warn = open(LOC+'/Warning_File.txt',"wb")
     warn = open(LOC+'\\SimulatedGraph\\Warning_File.txt',"w")
@@ -602,15 +620,15 @@ def write_warning_file(temp_folder,warn_flag):
 
 
 def create_graph(temp_folder,scenario,seed = 0,startpoint = 0):
-
+    # this is the primary controller function 
     at_list,attribute_histograms,mal_role,temparray,TPM,degree_array = setup_and_files(temp_folder,scenario,seed)
-
+    print "early setup"
     roles,TM,degree_array,a,lendegar,GI = setup_and_files_cont(degree_array,TPM)
-
+    print "late setup"
     nodes,innodes,outnodes,RPM = node_creation(roles,TM,degree_array,lendegar,a,startpoint,GI)
-
-    edgelist,warn_flag= edge_creation(RPM,TM,nodes,temparray,attribute_histograms,mal_role,innodes,outnodes)
-
+    print "nodes generated"
+    edgelist,warn_flag = edge_creation(RPM,TM,nodes,temparray,attribute_histograms,mal_role)
+    print "edges generated"
     write_graph_to_file(temp_folder,at_list,edgelist)
 
     write_warning_file(temp_folder,warn_flag)
