@@ -1,7 +1,7 @@
 '''
 Created on Feb 7, 2017
 
-@author: tb2038, sh2364
+@author: sh2364, tb2038
 '''
 
 from __future__ import division
@@ -12,6 +12,7 @@ import csv
 import sys
 import os
 import warnings
+import Read_Params as rp
 from os import listdir
 
 warnings.filterwarnings("ignore")
@@ -20,8 +21,9 @@ comm = MPI.COMM_WORLD
 rank = comm.Get_rank()
 numprocs = comm.Get_size()
 
-nRole = 4
-noOfBins = 1000
+params = rp.Read_Params().Params
+nRole = params['nRole']
+noOfBins = params['noBin']
 
 def find_all_filenames(path_to_dir):
     filenames = listdir(path_to_dir)
@@ -35,19 +37,16 @@ allFiles = find_all_filenames(input_folder)
 temp_folder = os.path.dirname(os.path.dirname(input_folder))
 temp_folder += "/temp/"
 
-
 #debug_filename = temp_folder + "output_"+str(rank)+".txt"
-#text_file = open(debug_filename, "a")
-
-outputstring = ""
+#outputstring = ""
 
 for f in allFiles:
+    #text_file = open(debug_filename, "a")
     Data_file = input_folder+f
     Role_info = temp_folder +"role_information"+ f.split('.')[0] +".csv"
     Role_df = pd.read_csv(Role_info, delimiter=',', usecols=[0, 1])
     Data_file_df = pd.read_csv(Data_file, delimiter=',',usecols=[0, 3, 6])
     s = (nRole, nRole)
-
     if rank == 0:
         #Initialize per file
         All_Role_Matrix = dict()
@@ -64,7 +63,6 @@ for f in allFiles:
             merge_Indegree_Lst = []
             merge_Outdegree_Lst = []
             nodeList = Role_df.loc[Role_df['Role'] == i, "Node"].tolist()
-            #nodeList = nodeList.item()
             nNodes.append(len(nodeList))
             #outputstring = "len(nodeList): " + str(len(nodeList))+"\n"
             #text_file.write("%s" % outputstring)
@@ -78,6 +76,7 @@ for f in allFiles:
         Edge_matrix = np.zeros(s)
         RoleArray = np.zeros(s)
         nodeList = comm.bcast(nodeList, root=0)
+        #print "No of nodes in role: "+str(i)+ " is "+str(len(nodeList))
         #outputstring = "Found nodeList"+"\n"
         #text_file.write("%s" % outputstring)
         noRow = int(np.ceil(len(nodeList)/float(numprocs)))
@@ -92,6 +91,7 @@ for f in allFiles:
         #text_file.write("%s" % outputstring)
         Indegree_Lst = []
         Outdegree_Lst = []
+        #print "rank: "+str(rank)+" , start: "+str(start)+" , end: "+str(end)
         for node in nodeList[start:end]:
             node_data = Data_file_df[Data_file_df['SrcAddr']== node]
             for r in range(1, len(node_data)):
@@ -118,7 +118,6 @@ for f in allFiles:
                 node_column_edge = node_data['DstAddr'].iloc[row]
                 node_role_column_edge = Role_df[Role_df['Node'] == node_column_edge]
                 Column_state_edge = node_role_column_edge.iloc[0, 1]
-
                 node_role_row_edge = Role_df[Role_df['Node'] == node]
                 row_state_edge = node_role_row_edge.iloc[0, 1]
                 try:
@@ -136,7 +135,7 @@ for f in allFiles:
             Outdegree_Lst.append(Outdegree_count)
 
         #Merge all work for single role
-        #outputstring = "Finish calculation, now start merging"+"\n"
+        #outputstring = "Finish calculation, now start merging for single role"+"\n"
         #text_file.write("%s" % outputstring)
         comm.Reduce([RoleArray, MPI.DOUBLE], [sum_RoleArray, MPI.DOUBLE],op = MPI.SUM, root=0)
         comm.Reduce([Edge_matrix, MPI.DOUBLE], [sum_Edge_matrix, MPI.DOUBLE],op = MPI.SUM, root=0)
@@ -147,13 +146,16 @@ for f in allFiles:
             merge_Indegree_Lst = [val for sublist in merge_Indegree_Lst for val in sublist]
             merge_Outdegree_Lst = [val for sublist in merge_Outdegree_Lst for val in sublist]
 
-        comm.barrier()
+        #comm.barrier()
+        #print "Rank: "+str(rank)+" >> After barrier at line 148."
         #outputstring = "sum_RoleArray: "+"\n"+ str(sum_RoleArray) +"\n"
+        #outputstring = "Rank: "+str(rank)+" >> After barrier at line 148. " +"\n"
         #text_file.write("%s" % outputstring)
         #outputstring = "sum_Edge_matrix: "+"\n"+ str(sum_Edge_matrix) +"\n"
         #text_file.write("%s" % outputstring)
 
         if rank == 0:
+            #print "Rank: "+str(rank)+" >> Merged all work for role: "+str(i)
             #outputstring = "Rank 0 >> Merged all work for role: "+ str(i) +"\n"
             #text_file.write("%s" % outputstring)
             s1 = (noOfBins,noOfBins)
@@ -168,6 +170,7 @@ for f in allFiles:
             #outputstring = "\n" + "merge_Outdegree_Lst: " + "\n"
             #text_file.write("%s" % outputstring)
             #text_file.write(merge_Outdegree_Lst)
+            #outputstring = "Rank: "+str(rank)+" >> Before calculating histogram. " +"\n"
             hist1_2, bins_indegree, bins_outdegree = np.histogram2d(merge_Indegree_Lst, merge_Outdegree_Lst, noOfBins)
 
             #Save all work for role i
@@ -181,7 +184,8 @@ for f in allFiles:
             totals_Edge_matrix = totals_Edge_matrix+sum_Edge_matrix
 
         comm.barrier()#All processor must unite at this point, then go forward for next role
-
+        #outputstring = "Rank: "+str(rank)+" >> After barrier at line 183. " +"\n"
+        #text_file.write("%s" % outputstring)
     #Write down everything for file f
     if rank == 0:
         #outputstring = "Rank 0 >> Merged all work for all role: "+"\n"
@@ -248,4 +252,5 @@ for f in allFiles:
                         nodehist_file.write("%s, %s, %s \n" % (a[i+1], b[j], 0.0))
 
         nodehist_file.close()
+
     #text_file.close()
