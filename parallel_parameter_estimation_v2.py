@@ -23,7 +23,7 @@ numprocs = comm.Get_size()
 
 params = rp.Read_Params().Params
 nRole = params['nRole']
-noOfBins = 1000
+noOfBins = params['noBin']
 
 def find_all_filenames(path_to_dir):
     filenames = listdir(path_to_dir)
