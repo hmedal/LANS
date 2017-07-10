@@ -66,7 +66,7 @@ for x in attributes:
 
 # Check to see if the combined file already exists
 # If it doesn't exist, then create it by combining the two source files
-if not os.path.exists(temp_folder + 'merged_dataframe_' + ctu_files[w].split('.', 1)[0] + '.csv'):
+if not os.path.exists(temp_folder + 'merged_dataframe_' + ctu_files[w].split('.', 1)[0] +'.'+ ctu_files[w].split('.', 1)[1]):
 	# Create empty columns for our roles
 	ctu_pd['SrcRole'] = ''
 	ctu_pd['DstRole'] = ''
@@ -87,7 +87,7 @@ if not os.path.exists(temp_folder + 'merged_dataframe_' + ctu_files[w].split('.'
 	ctu_pd.to_csv(temp_folder +'merged_dataframe_' + ctu_files[w])
 
 # Open the csv for next part
-merged_df = pd.read_csv(temp_folder + 'merged_dataframe_' + ctu_files[w].split('.', 1)[0] + '.csv')
+merged_df = pd.read_csv(temp_folder + 'merged_dataframe_' + ctu_files[w].split('.', 1)[0] + '.'+ctu_files[w].split('.', 1)[1])
 
 i = 0
 j = 0
