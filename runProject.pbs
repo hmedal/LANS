@@ -26,6 +26,6 @@ echo 'All Workers Started'
 ./Spark_Config.sh
 Rscript --vanilla CombineCSV.R
 python role_mining.py
-mpirun -n 80 python parallel_parameter_estimation_v4.py
+mpirun -n 80 python parallel_parameter_estimation_v5.py
 mpirun -n 80 python create_3D_edge_attribute_histograms.py
 mpirun -n 80 python Enterprise_Connection_With_Graph_Simulation.py
