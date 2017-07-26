@@ -9,11 +9,6 @@ import gc
 import numpy
 
 
-innodes = []
-outnodes = []
-totalflag = 0
-
-
 def get_histograms(scenario,input_folder, at_list):
     
     hist_list = dict()
@@ -330,9 +325,9 @@ def generate_node_exact(nodes,r,degree_array,len_deg_ar,TM,degpos):
     return [l + 1,startrole,indeg,outdeg]
 
 
-def generate_edge(f,TM,nodes):
-    global innodes
-    global outnodes
+
+
+def generate_edge2(f,TM,nodes,innodes,outnodes):
     #determines the start and end point for an edge to be added to the graph, also modifies innodes and outnodes
     if len(outnodes[f]) > 1:
         gen = random.randint(0, len(outnodes[f])-1)
@@ -354,7 +349,12 @@ def generate_edge(f,TM,nodes):
             return 'complete', 'complete'
     p = outnodes[f][gen][1]  # previous role connection
     i = outnodes[f][gen][0]  # node ID
-
+#    count = 0
+#    for each in innodes:
+#        for item in each:
+#            if int(item[2]) < 1:
+#                innodes[count].remove(item)
+#        count += 1
     j = TM[f][p]  # matrix entry for previously connected role
     k = float(random.randint(0, 10000))/10000
     dest = -1
@@ -364,6 +364,7 @@ def generate_edge(f,TM,nodes):
             dest = count
             break
         count += 1
+
     tmp = 0
     count = 0
     for each in j:  # determine, based on probability, which role we should connect to
@@ -375,7 +376,14 @@ def generate_edge(f,TM,nodes):
     flag2 = 0
     if len(innodes) > dest:  # make sure we didnt select an invalid role
         if len(innodes[dest]) > 1:  # if the role is has nodes in it, we will choose a destination from it
-            k = random.randint(0,len(innodes[dest])-1)
+            tflag = 1
+            while tflag == 1:
+                k = random.randint(0,len(innodes[dest])-1)
+                if int(innodes[dest][k][2]) < 1:
+                    innodes[dest].remove(innodes[dest][k])
+
+                else:
+                    tflag = 0
         elif len(innodes[dest]) == 1:  # one entry condition
             k = 0
         else:
@@ -383,20 +391,22 @@ def generate_edge(f,TM,nodes):
             k = random.randint(0,len(nodes[dest])-1)  # choosing a random value from the chosen destination role
 
     if flag2 == 1:
+
         count = 0
         for each in innodes:
             count += len(each)
         if count >= 1:
             tmp = random.randrange(0,count)
             count = 0
+            k = -1
             for each in innodes:
                 if len(each) <= tmp:
                     tmp -= len(each)
                     count += 1
-                else:
+                elif k == -1:
                     k = tmp
+                    tmp -= len(each)
                     dest = count
-                    break
         else:
             ret = nodes[dest][k][0]
             outnodes[f][gen][2] = dest
@@ -405,24 +415,54 @@ def generate_edge(f,TM,nodes):
                 outnodes[f].remove(outnodes[f][gen])
             global totalflag
             if totalflag == 1:
-                return dest, i, ret
+                return dest, i, ret,innodes,outnodes,nodes
             else:
+                for each in innodes:
+                    if len(each) > 0:
+                        for item in each:
+                            print item
+                    else:
+                        print each
+                #return dest, i, ret,innodes,outnodes,nodes
                 print "report this error to Chris", innodes[dest][k][0]
                 sys.exit(-1)
 
-    ret = innodes[dest][k][0]  # get the ID for the chosen destination node     IF IN ERROR, REPORT TO CHRIS
-
-    val = int(innodes[dest][k][2]) - 1  # decrement the indegree for destination node
+    try:
+        ret = innodes[dest][k][0]  # get the ID for the chosen destination node     IF IN ERROR, REPORT TO CHRIS
+    except Exception, e:
+        print len(innodes[dest])
+        print dest
+        print k
+        for each in innodes:
+            print len(each)
+        sys.exit()
+#    acc = 0  # 5 lines of testcode to calculate total remaining indegree
+#    for each in innodes:
+#        for item in each:
+#            acc += int(item[2])
+#    nodedata = innodes[dest][k]
+    innodes[dest][k][2]  = int(innodes[dest][k][2]) - 1  # decrement the indegree for destination node
     #print innodes[dest][k][2]
-    if val <= 0:  # if after decrement the indegree becomes zero, we remove it from innodes
+    if innodes[dest][k][2] <= 0:  # if after decrement the indegree becomes zero, we remove it from innodes
         innodes[dest].remove(innodes[dest][k])
-
+#    acc2 = 0  # 12 lines of testcode to calculate total remaining indegree, compare it to
+#    for each in innodes:
+#        for item in each:
+#            acc2 += int(item[2])
+#    if acc != acc2 + 1:
+#        print "invalid node removed"
+#        print acc, acc2
+#        print nodedata
+#        print len(innodes[dest])
+#        print dest
+#        print len(innodes)
+#        sys.exit(0)
     outnodes[f][gen][2] = dest  # Update previously connected role in the source node
     outnodes[f][gen][3] -= 1  # decrement the outdegree of the source node
     if outnodes[f][gen][3] == 0:  # if the source node is now empty of out degree, we remove it from the list
         outnodes[f].remove(outnodes[f][gen])
 
-    return dest, i, ret
+    return dest, i, ret,innodes,outnodes,nodes
 
 
 def generate_edge_old(f,TM,nodes):
@@ -910,7 +950,7 @@ def node_maker(histograms):
     return l1
 
 
-def nodeCreation(roles,TM,a,startpoint,GI,histlist):
+def nodeCreation(roles,TM,a,startpoint,GI,histlist,innodes,outnodes):
 
     # this function creates the list of nodes (vertices) for the graph including the in and out degree and assigned role
     count = 0
@@ -957,13 +997,23 @@ def nodeCreation(roles,TM,a,startpoint,GI,histlist):
         RPM.append(o)
 
     count = 0
+    iterator = 0
+
     # these loops create the indegree and outdegree objects that are used to determine where edges when they are generated
 	# they also delete any entries that have a zero for the associated degree so that node will not be used in the associated direction
-    global innodes
-    global outnodes
+
     for each in nodes:
-        outnodes.append(each[:])
-        innodes.append(each[:])
+        outnodes.append([])
+        innodes.append([])
+        for item in each:
+            outnodes[count].append([])
+            innodes[count].append([])
+            for obj in item:
+                outnodes[count][iterator].append(obj)
+                innodes[count][iterator].append(obj)
+            iterator += 1
+        iterator = 0
+        count += 1
     count = 0
     iterator = 0
     for each in nodes:
@@ -995,16 +1045,15 @@ def nodeCreation(roles,TM,a,startpoint,GI,histlist):
     for each in outnodes:
         for item in each:
             outtotal += item[3]
-    if intotal >= outtotal:
-        global totalflag
+    global totalflag
+    totalflag = 0
+    if intotal <= outtotal:
         totalflag = 1
 
-    print intotal, outtotal
-    print intop
-    return nodes,RPM
+    return nodes,RPM,innodes,outnodes
 
 
-def edge_creation(RPM,TM,nodes,attribute_histograms,mal_role):
+def edge_creation(RPM,TM,nodes,attribute_histograms,mal_role,innodes,outnodes):
 
     # this function generates the edgelist that will become the final graph when written to file
     edgelist = []
@@ -1024,7 +1073,7 @@ def edge_creation(RPM,TM,nodes,attribute_histograms,mal_role):
                     accumulator += item
             if accumulator <= x:
                 role += 1
-        x,y,z = generate_edge(role,TM,nodes[:])
+        x,y,z,innodes,outnodes,nodes = generate_edge2(role,TM,nodes,innodes,outnodes)
         if y == 'complete':
             break
         if y != z:
@@ -1040,7 +1089,7 @@ def edge_creation(RPM,TM,nodes,attribute_histograms,mal_role):
         if count % 10000 == 0 and count > 0:
             print count
         count += 1
-    return edgelist,warn_flag
+    return edgelist,warn_flag,innodes,outnodes
 
 
 def write_graph_to_file(temp_folder,at_list,edgelist):
@@ -1095,24 +1144,24 @@ def write_warning_file(temp_folder,warn_flag):
 
 
 def create_graph(temp_folder,scenario,seed = 0,startpoint = 0):
-    global innodes
-    global outnodes
+    innodes = []
+    outnodes = []
     deg_flag = 1 # set this to opt for exact values from degree histogram rather than probabiltiy
     # this is the primary controller function 
     at_list,attribute_histograms,mal_role,TPM,histlist = setupAndFiles(temp_folder,scenario,seed)
     print "early setup"
     roles,TM,a,GI = setupAndFilesCont(TPM)
     print "late setup"
-    nodes,RPM = nodeCreation(roles,TM,a,startpoint,GI,histlist)
+    nodes,RPM,innodes,outnodes = nodeCreation(roles,TM,a,startpoint,GI,histlist,innodes,outnodes)
     print "nodes generated"
-    edgelist,warn_flag = edge_creation(RPM,TM,nodes,attribute_histograms,mal_role)
+    edgelist,warn_flag,innodes,outnodes = edge_creation(RPM,TM,nodes,attribute_histograms,mal_role,innodes,outnodes)
     print "edges generated"
     write_graph_to_file(temp_folder,at_list,edgelist)
 
     acc = 0
     for each in innodes:
         for item in each:
-            acc += item[2]
+            acc += int(item[2])
     print acc
 
     write_warning_file(temp_folder,warn_flag)
@@ -1124,7 +1173,7 @@ if __name__ == "__main__":
     #create_graph("5",startpoint=0)
     TF = "C:\\Users\\Chris\\Desktop\\role4_bins200\\temp\\"
     #TF = "/work/fz56/Graph-Simulation-4-master/newfolder/"
-    create_graph(TF,"5",seed=0)
+    create_graph(TF,"11",seed=0)
     print(time.time() - start)
     #comm = mpi4py.MPI.COMM_WORLD
     #MPI_size = comm.Get_size()
