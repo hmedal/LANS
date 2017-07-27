@@ -417,46 +417,15 @@ def generate_edge2(f,TM,nodes,innodes,outnodes):
             if totalflag == 1:
                 return dest, i, ret,innodes,outnodes,nodes
             else:
-                for each in innodes:
-                    if len(each) > 0:
-                        for item in each:
-                            print item
-                    else:
-                        print each
-                #return dest, i, ret,innodes,outnodes,nodes
                 print "report this error to Chris", innodes[dest][k][0]
                 sys.exit(-1)
 
-    try:
-        ret = innodes[dest][k][0]  # get the ID for the chosen destination node     IF IN ERROR, REPORT TO CHRIS
-    except Exception, e:
-        print len(innodes[dest])
-        print dest
-        print k
-        for each in innodes:
-            print len(each)
-        sys.exit()
-#    acc = 0  # 5 lines of testcode to calculate total remaining indegree
-#    for each in innodes:
-#        for item in each:
-#            acc += int(item[2])
-#    nodedata = innodes[dest][k]
+    ret = innodes[dest][k][0]  # get the ID for the chosen destination node     IF IN ERROR, REPORT TO CHRIS
+
     innodes[dest][k][2]  = int(innodes[dest][k][2]) - 1  # decrement the indegree for destination node
-    #print innodes[dest][k][2]
     if innodes[dest][k][2] <= 0:  # if after decrement the indegree becomes zero, we remove it from innodes
         innodes[dest].remove(innodes[dest][k])
-#    acc2 = 0  # 12 lines of testcode to calculate total remaining indegree, compare it to
-#    for each in innodes:
-#        for item in each:
-#            acc2 += int(item[2])
-#    if acc != acc2 + 1:
-#        print "invalid node removed"
-#        print acc, acc2
-#        print nodedata
-#        print len(innodes[dest])
-#        print dest
-#        print len(innodes)
-#        sys.exit(0)
+
     outnodes[f][gen][2] = dest  # Update previously connected role in the source node
     outnodes[f][gen][3] -= 1  # decrement the outdegree of the source node
     if outnodes[f][gen][3] == 0:  # if the source node is now empty of out degree, we remove it from the list
@@ -558,12 +527,10 @@ def setup_and_files(temp_folder,scenario,seed):
     random.seed(seed)
     roles = 0
     input_folder = os.path.dirname(os.path.dirname(temp_folder))
-    #input_folder += "/input_files/"
-    input_folder += "\\input_files\\"
+    input_folder += "/input_files/"
+    #input_folder += "\\input_files\\"
     at_list = ["Proto","StartTime","Dur","Sport","Dir","Dport","State","sTos","dTos","TotPkts","TotBytes","Label"]
     attribute_histograms = get_histograms(scenario,temp_folder, at_list)
-    #print attribute_histograms['at_list']
-    #sys.exit(0)
     mal_role = temp_folder+ "malicious_role" +scenario + ".txt"
     mal_role = open(mal_role,'r')
     for each in mal_role:
@@ -573,9 +540,6 @@ def setup_and_files(temp_folder,scenario,seed):
         name_inputfile = input_folder+ scenario + "." + fname[-1]#name_inputfile = "" + scenario + "." + fname[-1]
     else:
         name_inputfile = input_folder+ scenario
-
-    #print attribute_histograms['attributes']
-    #sys.exit(0)
 
     TPM = open(temp_folder+"Param_Roles_Information" + scenario + ".csv", 'r')
     histfile = open(temp_folder+"node_degree_histogram2"+ scenario + ".txt", 'r')
@@ -612,12 +576,10 @@ def setupAndFiles(temp_folder,scenario,seed):
     random.seed(seed)
     roles = 0
     input_folder = os.path.dirname(os.path.dirname(temp_folder))
-    #input_folder += "/input_files/"
-    input_folder += "\\input_files\\"
+    input_folder += "/input_files/"
+    i#nput_folder += "\\input_files\\"
     at_list = ["Proto","StartTime","Dur","Sport","Dir","Dport","State","sTos","dTos","TotPkts","TotBytes","Label"]
     attribute_histograms = get_histograms(scenario,temp_folder, at_list)
-    #print attribute_histograms['at_list']
-    #sys.exit(0)
     mal_role = temp_folder+ "malicious_role" +scenario + ".txt"
     mal_role = open(mal_role,'r')
     for each in mal_role:
@@ -817,19 +779,7 @@ def node_creation(roles,TM,degree_array,lendegar,a,startpoint,GI,deg_flag = 0):
     total = 0
     indegreecounter = 0
     outdegreecounter = 0
-    fileout1 = open("C:\\Users\\Chris\\Desktop\\GraphSimulation5\\degreefile.txt",'w')
-    fileout1.write("NODE ID, ROLE#,INDEGREE,OUTDEGREE\n")
-    for each in nodes:
-        for item in each:
-            for val in item:
-                fileout1.write(str(val)+",")
-            fileout1.write("\n")
-            indegreecounter += 1
-            outdegreecounter += 1
-            item[0] = count
-            count += 1
-    fileout1.close()
-    
+
     count = 0
     for each in nodes:
         for item in each:
@@ -866,10 +816,6 @@ def node_creation(roles,TM,degree_array,lendegar,a,startpoint,GI,deg_flag = 0):
                 iterator += 1
 
         count += 1
-    for each in innodes:
-        for item in each:
-            print item
-    sys.exit(1)
     count = 0
     for each in nodes:
         if len(each) != 0:
@@ -967,18 +913,7 @@ def nodeCreation(roles,TM,a,startpoint,GI,histlist,innodes,outnodes):
     total = 0
     indegreecounter = 0
     outdegreecounter = 0
-    fileout1 = open("C:\\Users\\Chris\\Desktop\\GraphSimulation5\\degreefile.txt",'w')
-    fileout1.write("NODE ID, ROLE#,INDEGREE,OUTDEGREE\n")
-    for each in nodes:
-        for item in each:
-            for val in item:
-                fileout1.write(str(val)+",")
-            fileout1.write("\n")
-            indegreecounter += 1
-            outdegreecounter += 1
-            item[0] = count
-            count += 1
-    fileout1.close()
+    
 
     count = 0
     for each in nodes:
@@ -1098,8 +1033,8 @@ def write_graph_to_file(temp_folder,at_list,edgelist):
     MPI_rank = comm.Get_rank()
     #name_outputfile = "SimulatedGraph/localgen_" + str(MPI_rank)+'.csv'
     name_outputfile = os.path.dirname(os.path.dirname(temp_folder))
-    #name_outputfile = name_outputfile + "/SimulatedGraph/localgen_" + str(MPI_rank)+'.csv'
-    name_outputfile = name_outputfile + "\\SimulatedGraph\\localgen_" + str(MPI_rank)+'.csv'
+    name_outputfile = name_outputfile + "/SimulatedGraph/localgen_" + str(MPI_rank)+'.csv'
+    #name_outputfile = name_outputfile + "\\SimulatedGraph\\localgen_" + str(MPI_rank)+'.csv'
 	
     # starts the graph file with a header for identification of collumns 
     outfile = open(name_outputfile, 'wb')
@@ -1133,8 +1068,8 @@ def write_warning_file(temp_folder,warn_flag):
 
     # writes a warning file that indicates whether indgree ran out or if there has been an error with histograms
     LOC = os.path.dirname(os.path.dirname(temp_folder))
-    #warn = open(LOC+'/Warning_File.txt',"wb")
-    warn = open(LOC+'\\SimulatedGraph\\Warning_File.txt',"w")
+    warn = open(LOC+'/Warning_File.txt',"wb")
+    #warn = open(LOC+'\\SimulatedGraph\\Warning_File.txt',"w")
     if warn_flag == True:
         warn.write("WARNING\n")
         warn.write("detected edge connection between unanticipated roles or missing histogram\n")
@@ -1149,20 +1084,10 @@ def create_graph(temp_folder,scenario,seed = 0,startpoint = 0):
     deg_flag = 1 # set this to opt for exact values from degree histogram rather than probabiltiy
     # this is the primary controller function 
     at_list,attribute_histograms,mal_role,TPM,histlist = setupAndFiles(temp_folder,scenario,seed)
-    print "early setup"
     roles,TM,a,GI = setupAndFilesCont(TPM)
-    print "late setup"
     nodes,RPM,innodes,outnodes = nodeCreation(roles,TM,a,startpoint,GI,histlist,innodes,outnodes)
-    print "nodes generated"
     edgelist,warn_flag,innodes,outnodes = edge_creation(RPM,TM,nodes,attribute_histograms,mal_role,innodes,outnodes)
-    print "edges generated"
     write_graph_to_file(temp_folder,at_list,edgelist)
-
-    acc = 0
-    for each in innodes:
-        for item in each:
-            acc += int(item[2])
-    print acc
 
     write_warning_file(temp_folder,warn_flag)
 
@@ -1171,7 +1096,7 @@ if __name__ == "__main__":
 
     start = time.time()
     #create_graph("5",startpoint=0)
-    TF = "C:\\Users\\Chris\\Desktop\\role4_bins200\\temp\\"
+    #TF = "C:\\Users\\Chris\\Desktop\\role4_bins200\\temp\\"
     #TF = "/work/fz56/Graph-Simulation-4-master/newfolder/"
     create_graph(TF,"11",seed=0)
     print(time.time() - start)
