@@ -35,6 +35,37 @@ def get_histograms(scenario,input_folder, at_list):
     return hist_list
 
 
+def attrinput(temp_folder,scenario,at_list):
+    ret = dict()
+    for each in at_list:
+        title = each
+        count = 0
+        attrfile = open(temp_folder+each+scenario+'.txt','r')
+        attrarray = []
+        for each in attrfile:
+            each = each.rstrip('\n')
+            each = ast.literal_eval(each)
+            if count > 0:
+                attrarray.append(each)
+            count += 1
+        attrfile.close()
+        ret[title] = attrarray
+    return ret
+
+
+def protoinput(temp_folder,scenario):
+    count = 0
+    protofile = open(temp_folder+'Proto'+scenario+'.txt','r')
+    protoarray = []
+    for each in protofile:
+        each = each.rstrip('\n')
+        each = ast.literal_eval(each)
+        if count > 0:
+            protoarray.append(each)
+        count += 1
+    protofile.close()
+    return protoarray
+
 def to_edge(temp_folder, source, dest):
     fsource = open(temp_folder +'samples.csv','r')
     tempar = []
@@ -85,16 +116,71 @@ def setstart(r1,TM):
     return flag
 
 
-def set_attr(temparray):
-    rng = random.randint(1,len(temparray)-1)
+def set_attr(at_list,attrdict):
     res = []
     count = 0
-    for each in temparray[rng]:
-        if count != 0 and count != 1 and count != 2:
-            each = each.strip('\n')
-            res.append(each)
-        count += 1
+    accumulator = 0
+    flag1 = 0
+    for each in at_list:
+        obj = ""
+        if len(attrdict[each]) != 0:
+            rand = random.randint(0,1000000)
+            rand = float(rand)/1000000
+            for item in attrdict[each][1]:
+                accumulator += item
+                count += 1
+                if accumulator >= rand:
+                    try:
+                        obj = str(attrdict[each][0][count-1]).strip("(").strip("[").strip("]").split(",")
+                        if len(obj) == 1:
+                            obj = obj[0]
+
+                        if isinstance(obj,(list,tuple)):
+                            try:
+                                obj[0] = float(obj[0])
+                                obj[1] = float(obj[1])
+                                obj = random.uniform(obj[0],obj[1])
+                            except ValueError,e:
+                                obj = obj[0]
+
+                    except SyntaxError, e:
+                        obj = str(attrdict[each][0][0]).split(",")[0].strip("(")
+                    break
+            count = 0
+        res.append(obj)
+        count = 0
     return [res]
+
+
+def protocol(protoarray):
+    prot = random.randint(0,100000)
+    prot = float(prot)/100000
+    accumulator = float(0)
+    count = 0
+    for each in protoarray[1]:
+        accumulator += each
+        if accumulator >= prot:
+            return protoarray[0][count]
+        count += 1
+    return protoarray[0][count-1]
+
+
+
+def add_edge2(b,c,role,mal_role,protoarray,temparray,attrdict):
+    d = protocol(protoarray)
+    oth = set_attr(temparray,attrdict)
+    ret = [b,c,d]
+    for each in oth:
+        for item in each:
+            ret.append(item)
+    if('otnet' in ret[-1] or 'alicious' in ret[-1]):
+        ret[-1] = 'flow = background'
+    if(role == mal_role):
+        ret[-1] = 'flow = Botnet Activity'
+    else:
+        ret[-1] = 'flow = normal dataflow'
+    return ret,False
+
 
 
 def attributes(attribute_histograms,srole,drole):
@@ -577,9 +663,11 @@ def setupAndFiles(temp_folder,scenario,seed):
     roles = 0
     input_folder = os.path.dirname(os.path.dirname(temp_folder))
     input_folder += "/input_files/"
-    i#nput_folder += "\\input_files\\"
-    at_list = ["Proto","StartTime","Dur","Sport","Dir","Dport","State","sTos","dTos","TotPkts","TotBytes","Label"]
-    attribute_histograms = get_histograms(scenario,temp_folder, at_list)
+    #input_folder += "\\input_files\\"
+    at_list = ["StartTime","Dur","Sport","Dir","Dport","State","sTos","dTos","TotPkts","TotBytes","Label"]
+    proto = protoinput(temp_folder,scenario)
+    attrdict = attrinput(temp_folder,scenario,at_list)
+    #attribute_histograms = get_histograms(scenario,temp_folder, at_list)
     mal_role = temp_folder+ "malicious_role" +scenario + ".txt"
     mal_role = open(mal_role,'r')
     for each in mal_role:
@@ -594,7 +682,7 @@ def setupAndFiles(temp_folder,scenario,seed):
     TPM = open(temp_folder+"Param_Roles_Information" + scenario + ".csv", 'r')
     histfile = temp_folder+"node_degree_histogram2"+ scenario + ".txt"
     histlist = read_node_histograms(histfile)
-    return at_list,attribute_histograms,mal_role,TPM,histlist
+    return at_list,proto,mal_role,TPM,histlist,attrdict
 
 
 
@@ -779,7 +867,19 @@ def node_creation(roles,TM,degree_array,lendegar,a,startpoint,GI,deg_flag = 0):
     total = 0
     indegreecounter = 0
     outdegreecounter = 0
-
+    fileout1 = open("C:\\Users\\Chris\\Desktop\\GraphSimulation5\\degreefile.txt",'w')
+    fileout1.write("NODE ID, ROLE#,INDEGREE,OUTDEGREE\n")
+    for each in nodes:
+        for item in each:
+            for val in item:
+                fileout1.write(str(val)+",")
+            fileout1.write("\n")
+            indegreecounter += 1
+            outdegreecounter += 1
+            item[0] = count
+            count += 1
+    fileout1.close()
+    
     count = 0
     for each in nodes:
         for item in each:
@@ -913,7 +1013,18 @@ def nodeCreation(roles,TM,a,startpoint,GI,histlist,innodes,outnodes):
     total = 0
     indegreecounter = 0
     outdegreecounter = 0
-    
+    fileout1 = open("C:\\Users\\Chris\\Desktop\\GraphSimulation5\\degreefile.txt",'w')
+    fileout1.write("NODE ID, ROLE#,INDEGREE,OUTDEGREE\n")
+    for each in nodes:
+        for item in each:
+            for val in item:
+                fileout1.write(str(val)+",")
+            fileout1.write("\n")
+            indegreecounter += 1
+            outdegreecounter += 1
+            item[0] = count
+            count += 1
+    fileout1.close()
 
     count = 0
     for each in nodes:
@@ -988,7 +1099,7 @@ def nodeCreation(roles,TM,a,startpoint,GI,histlist,innodes,outnodes):
     return nodes,RPM,innodes,outnodes
 
 
-def edge_creation(RPM,TM,nodes,attribute_histograms,mal_role,innodes,outnodes):
+def edge_creation(RPM,TM,nodes,mal_role,innodes,outnodes,proto,at_list,attrdict):
 
     # this function generates the edgelist that will become the final graph when written to file
     edgelist = []
@@ -1012,7 +1123,7 @@ def edge_creation(RPM,TM,nodes,attribute_histograms,mal_role,innodes,outnodes):
         if y == 'complete':
             break
         if y != z:
-            edge,warn = add_edge(y,z,attribute_histograms,role,x,mal_role)
+            edge,warn = add_edge2(y,z,role,mal_role,proto,at_list,attrdict)
             edgelist.append(edge)
         flag = 1
         if warn == True:
@@ -1038,7 +1149,7 @@ def write_graph_to_file(temp_folder,at_list,edgelist):
 	
     # starts the graph file with a header for identification of collumns 
     outfile = open(name_outputfile, 'wb')
-    topline = "source,destination,"
+    topline = "source,destination,proto,"
     for each in at_list:
         topline = topline + each + ","
     outfile.write((topline + '\n').encode("utf-8"))
@@ -1079,14 +1190,14 @@ def write_warning_file(temp_folder,warn_flag):
 
 
 def create_graph(temp_folder,scenario,seed = 0,startpoint = 0):
+    # this is the primary controller function
     innodes = []
     outnodes = []
     deg_flag = 1 # set this to opt for exact values from degree histogram rather than probabiltiy
-    # this is the primary controller function 
-    at_list,attribute_histograms,mal_role,TPM,histlist = setupAndFiles(temp_folder,scenario,seed)
+    at_list,proto,mal_role,TPM,histlist,attrdict = setupAndFiles(temp_folder,scenario,seed)
     roles,TM,a,GI = setupAndFilesCont(TPM)
     nodes,RPM,innodes,outnodes = nodeCreation(roles,TM,a,startpoint,GI,histlist,innodes,outnodes)
-    edgelist,warn_flag,innodes,outnodes = edge_creation(RPM,TM,nodes,attribute_histograms,mal_role,innodes,outnodes)
+    edgelist,warn_flag,innodes,outnodes = edge_creation(RPM,TM,nodes,mal_role,innodes,outnodes,proto,at_list,attrdict)
     write_graph_to_file(temp_folder,at_list,edgelist)
 
     write_warning_file(temp_folder,warn_flag)
@@ -1096,7 +1207,7 @@ if __name__ == "__main__":
 
     start = time.time()
     #create_graph("5",startpoint=0)
-    #TF = "C:\\Users\\Chris\\Desktop\\role4_bins200\\temp\\"
+    TF = "C:\\Users\\Chris\\Desktop\\role4_bins200\\temp\\"
     #TF = "/work/fz56/Graph-Simulation-4-master/newfolder/"
     create_graph(TF,"11",seed=0)
     print(time.time() - start)
