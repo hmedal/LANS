@@ -868,22 +868,9 @@ def node_creation(roles,TM,degree_array,lendegar,a,startpoint,GI,deg_flag = 0):
 		
     degree_array = []
     count = 1
-    total = 0
-    indegreecounter = 0
-    outdegreecounter = 0
-    fileout1 = open("C:/Users/Chris/Desktop/GraphSimulation5/degreefile.txt",'w')
-    fileout1.write("NODE ID, ROLE#,INDEGREE,OUTDEGREE\n")
-    for each in nodes:
-        for item in each:
-            for val in item:
-                fileout1.write(str(val)+",")
-            fileout1.write("\n")
-            indegreecounter += 1
-            outdegreecounter += 1
-            item[0] = count
-            count += 1
-    fileout1.close()
-    
+
+
+
     count = 0
     for each in nodes:
         for item in each:
@@ -1013,22 +1000,7 @@ def nodeCreation(roles,TM,a,startpoint,GI,histlist,innodes,outnodes):
         startpos.append(setstart(count,TM))
         count += 1
     #generate the nodes to fill the required number for each role
-    count = 1
-    total = 0
-    indegreecounter = 0
-    outdegreecounter = 0
-    fileout1 = open("C:/Users/Chris/Desktop/GraphSimulation5/degreefile.txt",'w')
-    fileout1.write("NODE ID, ROLE#,INDEGREE,OUTDEGREE\n")
-    for each in nodes:
-        for item in each:
-            for val in item:
-                fileout1.write(str(val)+",")
-            fileout1.write("\n")
-            indegreecounter += 1
-            outdegreecounter += 1
-            item[0] = count
-            count += 1
-    fileout1.close()
+
 
     count = 0
     for each in nodes:
