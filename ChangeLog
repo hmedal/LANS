@@ -1,3 +1,4 @@
-Change log for Graph-Simulation-5:
+Graph-Simulation-5:
+===========================================================================
 - Developed faster version (>10x)
 - Achieved higher accuracy in terms of indegree and outdegree distribution
