@@ -40,7 +40,11 @@ def attrinput(temp_folder,scenario,at_list):
     for each in at_list:
         title = each
         count = 0
-        attrfile = open(temp_folder+each+scenario+'.txt','r')
+        try:
+            attrfile = open(temp_folder+each+scenario+'.txt','r')
+        except IOError,e:
+            ret[title]= []
+            continue
         attrarray = []
         for each in attrfile:
             each = each.rstrip('\n')
@@ -867,7 +871,7 @@ def node_creation(roles,TM,degree_array,lendegar,a,startpoint,GI,deg_flag = 0):
     total = 0
     indegreecounter = 0
     outdegreecounter = 0
-    fileout1 = open("C:\\Users\\Chris\\Desktop\\GraphSimulation5\\degreefile.txt",'w')
+    fileout1 = open("C:/Users/Chris/Desktop/GraphSimulation5/degreefile.txt",'w')
     fileout1.write("NODE ID, ROLE#,INDEGREE,OUTDEGREE\n")
     for each in nodes:
         for item in each:
@@ -1013,7 +1017,7 @@ def nodeCreation(roles,TM,a,startpoint,GI,histlist,innodes,outnodes):
     total = 0
     indegreecounter = 0
     outdegreecounter = 0
-    fileout1 = open("C:\\Users\\Chris\\Desktop\\GraphSimulation5\\degreefile.txt",'w')
+    fileout1 = open("C:/Users/Chris/Desktop/GraphSimulation5/degreefile.txt",'w')
     fileout1.write("NODE ID, ROLE#,INDEGREE,OUTDEGREE\n")
     for each in nodes:
         for item in each:
