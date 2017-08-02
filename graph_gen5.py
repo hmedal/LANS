@@ -868,9 +868,11 @@ def node_creation(roles,TM,degree_array,lendegar,a,startpoint,GI,deg_flag = 0):
 		
     degree_array = []
     count = 1
+    total = 0
+    indegreecounter = 0
+    outdegreecounter = 0
 
-
-
+    
     count = 0
     for each in nodes:
         for item in each:
@@ -1000,7 +1002,11 @@ def nodeCreation(roles,TM,a,startpoint,GI,histlist,innodes,outnodes):
         startpos.append(setstart(count,TM))
         count += 1
     #generate the nodes to fill the required number for each role
-
+    count = 1
+    total = 0
+    indegreecounter = 0
+    outdegreecounter = 0
+    
 
     count = 0
     for each in nodes:
