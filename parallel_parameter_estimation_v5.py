@@ -20,20 +20,23 @@ from os import listdir
 
 warnings.filterwarnings("ignore")
 
+#Use MPI
 comm = MPI.COMM_WORLD
 rank = comm.Get_rank()
 numprocs = comm.Get_size()
 
+#Read params from json file
 params = rp.Read_Params().Params
 nRole = params['nRole']
 noOfBins = params['noBin']
 noOf_ThinBins = 20
 
-
+#Read all input files from folder
 def find_all_filenames(path_to_dir):
     filenames = listdir(path_to_dir)
     return filenames
 
+#Read configuration, input and output file
 conf_file = open('Configuration.txt',"r")
 lineList = conf_file.readlines()
 conf_file.close()
@@ -43,7 +46,7 @@ temp_folder = os.path.dirname(os.path.dirname(input_folder))
 temp_folder += "/temp/"
 
 for f in allFiles:
-    Data_file = input_folder+f
+    Data_file = input_folder+f #Read each input file
     Role_info = temp_folder +"role_information"+ f.split('.')[0] +".csv"
     Role_df = pd.read_csv(Role_info, delimiter=',', usecols=[0, 1])
     Data_file_df = pd.read_csv(Data_file, delimiter=',',usecols=[0, 3, 6])
@@ -61,6 +64,7 @@ for f in allFiles:
         if rank == 0:
             merge_Indegree_Lst = []
             merge_Outdegree_Lst = []
+            #Find all nodes in Role i
             nodeList = Role_df.loc[Role_df['Role'] == i, "Node"].tolist()
             Role_Nodelist_Matrix[i] = nodeList
             nNodes.append(len(nodeList))
@@ -69,9 +73,10 @@ for f in allFiles:
             merge_Indegree_Lst = None
             merge_Outdegree_Lst = None
 
+        #Broadcast list of nodes of role i to all processors
         nodeList = comm.bcast(nodeList, root=0)
 
-        ######All processors except processor zero######
+        #All processors do the works below except processor zero
         noRow = int(np.ceil(len(nodeList)/float(numprocs-1)))#exclude rank 0
         start = (rank-1)*noRow
         end = start+noRow
@@ -80,6 +85,7 @@ for f in allFiles:
         if end > len(nodeList) or end == 0:
             end = len(nodeList)
 
+        #Find the #indegree and #outdegree for each node
         Indegree_Lst = []
         Outdegree_Lst = []
         for node in nodeList[start:end]:
@@ -92,6 +98,7 @@ for f in allFiles:
         merge_Outdegree_Lst = comm.gather(Outdegree_Lst, root=0)
 
         if rank == 0:
+            #Merge all indegrees and outdegrees
             merge_Indegree_Lst = [val for sublist in merge_Indegree_Lst for val in sublist]
             merge_Outdegree_Lst = [val for sublist in merge_Outdegree_Lst for val in sublist]
 
@@ -103,6 +110,7 @@ for f in allFiles:
                     indeg_Edges.append(k)
                     outDeg_Edges.append(k)
 
+                #For this version number of bins are same for indegrees and outdegrees
                 noOf_WideBins = noOfBins - noOf_ThinBins
                 ind_BinWidth = math.ceil(((max(merge_Indegree_Lst)+1) - noOf_ThinBins)/noOf_WideBins)
                 outd_BinWidth = math.ceil(((max(merge_Outdegree_Lst)+1) - noOf_ThinBins)/noOf_WideBins)
@@ -112,6 +120,7 @@ for f in allFiles:
                 if outd_BinWidth <= 0:
                     outd_BinWidth = 1
 
+                #Calculating customized edges
                 for l in range(noOf_WideBins):
                     indeg_Edges.append(indeg_Edges[-1] + ind_BinWidth)
                     outDeg_Edges.append(outDeg_Edges[-1] + outd_BinWidth)
@@ -121,6 +130,7 @@ for f in allFiles:
                 bins_indegree = []
                 bins_outdegree = []
 
+                #Find histogram using numpy
                 hist1_2, bins_indegree, bins_outdegree = np.histogram2d(merge_Indegree_Lst, merge_Outdegree_Lst, bins=(indeg_Edges, outDeg_Edges))
 
                 #Save all work for role i
