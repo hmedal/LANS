@@ -29,3 +29,4 @@ python role_mining.py
 mpirun -n 80 python parallel_parameter_estimation_v5.py
 python create_2D_edge_attribute_histograms.py
 mpirun -n 80 python Enterprise_Connection_With_Graph_Simulation.py
+python SimulationValidation.py
