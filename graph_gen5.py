@@ -58,7 +58,42 @@ def protocol(protoarray):
     return protoarray[0][count-1]
 
 
-def add_edge2(b,c,role,mal_role,protoarray,temparray,attrdict):
+def get_size(size_input,temp_folder):
+    #returns the number of nodes that will be present in a simulation of scenario
+    size_file = open(temp_folder +'Param_Roles_Information' + size_input.split('.')[0] + '.csv','r')
+    size_ar = []
+    for each in size_file:
+        size_ar.append(each)
+    size_file.close()
+    size_ar[0] = int(float(size_ar[0].strip(' ').strip('\n')))
+    loc = size_ar[0] * size_ar[0] + size_ar[0] * 2 + size_ar[0] + 4
+    count = 0
+    accum = 0
+    while count < loc + size_ar[0]:
+        if count >= loc:
+            accum += int(float(size_ar[count]))
+        count += 1
+    return accum
+
+
+def to_edge(temp_folder, source, dest):
+    # creates the crossover edges between enterprises
+    fsource = open(temp_folder +'samples.csv','r')
+    tempar = []
+    for each in fsource:
+        tempar.append(each)
+    ran = random.randint(0,len(tempar)-1)
+    line = tempar[ran].strip('\n').split(',')
+    line[0] = str(source)
+    line[1] = str(dest)
+    st = ''
+    for each in line:
+        st += each + ','
+    line = st.strip(',')
+    return line
+
+
+def add_edge(b,c,role,mal_role,protoarray,temparray,attrdict):
     d = protocol(protoarray)
     oth = set_attr(temparray,attrdict)
     ret = [b,c,d]
@@ -74,7 +109,7 @@ def add_edge2(b,c,role,mal_role,protoarray,temparray,attrdict):
     return ret,False
 
 
-def generate_edge2(f,TM,nodes,innodes,outnodes):
+def generate_edge(f,TM,nodes,innodes,outnodes):
     #determines the start and end point for an edge to be added to the graph, also modifies innodes and outnodes
     if len(outnodes[f]) > 1:
         gen = random.randint(0, len(outnodes[f])-1)
@@ -200,11 +235,11 @@ def edge_creation(RPM,TM,nodes,mal_role,innodes,outnodes,proto,at_list,attrdict)
                     accumulator += item
             if accumulator <= x:
                 role += 1
-        x,y,z,innodes,outnodes,nodes = generate_edge2(role,TM,nodes,innodes,outnodes)
+        x,y,z,innodes,outnodes,nodes = generate_edge(role,TM,nodes,innodes,outnodes)
         if y == 'complete':
             break
         if y != z:
-            edge,warn = add_edge2(y,z,role,mal_role,proto,at_list,attrdict)
+            edge,warn = add_edge(y,z,role,mal_role,proto,at_list,attrdict)
             edgelist.append(edge)
         flag = 1
         if warn == True:
