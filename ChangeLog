@@ -1,4 +1,6 @@
-Graph-Simulation-5:
+Graph-Simulation-6:
 ===========================================================================
-- Developed faster version (>10x)
-- Achieved higher accuracy in terms of indegree and outdegree distribution
+- Automation of validation report (works for single scenario only)
+- Validation of malicious netflows (need improvement in GS-7)
+- Organize the code and add meaningful comments
+- Netflows ordered by starttime at simulated graph
