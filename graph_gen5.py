@@ -9,7 +9,7 @@ import gc
 import random
 
 
-def set_attr(at_list, attrdict):
+def set_attr(at_list,attrdict):
     res = []
     count = 0
     accumulator = 0
@@ -93,20 +93,16 @@ def to_edge(temp_folder, source, dest):
     return line
 
 
-def add_edge(b,c,role,mal_role,mal_nodes,protoarray,temparray,attrdict):
+def add_edge(b,c,role,mal_role,protoarray,temparray,attrdict):
     d = protocol(protoarray)
     oth = set_attr(temparray,attrdict)
     ret = [b,c,d]
-    botflag = 0
-    for each in mal_nodes:
-        if int(each) == int(b):
-            botflag = 1
     for each in oth:
         for item in each:
             ret.append(item)
     if('otnet' in ret[-1] or 'alicious' in ret[-1]):
         ret[-1] = 'flow = background'
-    if(role == mal_role and botflag == 1):
+    if(role == mal_role):
         ret[-1] = 'flow = Botnet Activity'
     else:
         ret[-1] = 'flow = normal dataflow'
@@ -220,23 +216,13 @@ def generate_edge(f,TM,nodes,innodes,outnodes):
     return dest, i, ret,innodes,outnodes,nodes
 
 
-def edge_creation(RPM,TM,nodes,mal_role,innodes,outnodes,proto,at_list,attrdict,mal_info):
+def edge_creation(RPM,TM,nodes,mal_role,innodes,outnodes,proto,at_list,attrdict):
     # this function generates the edgelist that will become the final graph when written to file
     edgelist = []
     count = 0
     flag = 0
     warn = False
     warn_flag = False
-    # identify which nodes are considered botnet nodes from the malicious activity file for labeling netflow
-    potential_bots = []
-    for each in nodes[mal_role]:
-        if each[2] >= mal_info[2] and each[2] <= mal_info[3] and each[3] >= mal_info[4] and each[3]<= mal_info[5]:
-            potential_bots.append(each[0])
-    if len(potential_bots) < mal_info[1]:
-        num_bots = len(potential_bots)
-    else:
-        num_bots = mal_info[1]
-    mal_nodes = numpy.random.choice(potential_bots,num_bots,replace=False)
     # this loop continues until the total remaining outdegree is equal to zero
     while flag != 1:
         role = 0
@@ -253,7 +239,7 @@ def edge_creation(RPM,TM,nodes,mal_role,innodes,outnodes,proto,at_list,attrdict,
         if y == 'complete':
             break
         if y != z:
-            edge,warn = add_edge(y,z,role,mal_role,mal_nodes,proto,at_list,attrdict)
+            edge,warn = add_edge(y,z,role,mal_role,proto,at_list,attrdict)
             edgelist.append(edge)
         flag = 1
         if warn == True:
@@ -551,10 +537,9 @@ def setupAndFiles(temp_folder,scenario,seed):
     #attribute_histograms = get_histograms(scenario,temp_folder, at_list)
     mal_role = temp_folder+ "malicious_role" +scenario + ".txt"
     mal_role = open(mal_role,'r')
-    mal_info = []
     for each in mal_role:
-        mal_info.append(int(each))
-    mal_role = mal_info[0]
+        mal_role = int(each)
+        break
     if len(fname) > 1:
         name_inputfile = input_folder+ scenario + "." + fname[-1]#name_inputfile = "" + scenario + "." + fname[-1]
     else:
@@ -564,7 +549,7 @@ def setupAndFiles(temp_folder,scenario,seed):
     TPM = open(temp_folder+"Param_Roles_Information" + scenario + ".csv", 'r')
     histfile = temp_folder+"node_degree_histogram2"+ scenario + ".txt"
     histlist = read_node_histograms(histfile)
-    return at_list,proto,mal_role,TPM,histlist,attrdict,mal_info
+    return at_list,proto,mal_role,TPM,histlist,attrdict
 
 
 def setupAndFilesCont(TPM):
@@ -622,10 +607,10 @@ def create_graph(temp_folder,scenario,seed = 0,startpoint = 0):
     # this is the primary controller function
     innodes = []
     outnodes = []
-    at_list,proto,mal_role,TPM,histlist,attrdict,mal_info = setupAndFiles(temp_folder,scenario,seed)
+    at_list,proto,mal_role,TPM,histlist,attrdict = setupAndFiles(temp_folder,scenario,seed)
     roles,TM,a,GI = setupAndFilesCont(TPM)
     nodes,RPM,innodes,outnodes = nodeCreation(roles,TM,a,startpoint,GI,histlist,innodes,outnodes)
-    edgelist,warn_flag,innodes,outnodes = edge_creation(RPM,TM,nodes,mal_role,innodes,outnodes,proto,at_list,attrdict,mal_info)
+    edgelist,warn_flag,innodes,outnodes = edge_creation(RPM,TM,nodes,mal_role,innodes,outnodes,proto,at_list,attrdict)
     write_graph_to_file(temp_folder,at_list,edgelist)
 
     write_warning_file(temp_folder,warn_flag)
