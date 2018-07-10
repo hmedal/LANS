@@ -60,10 +60,10 @@ class Property:
         return sorted(nx.degree(self.G).values())
 
     def getInDegree(self):
-        return sorted(self.G.in_degree().values())
+        return sorted(dict(self.G.in_degree()).values())
 
     def getOutDegree(self):
-        return sorted(self.G.out_degree().values())
+         return sorted(dict(self.G.out_degree()).values())
 
     def getAverageNeighborDegree(self):
         return sorted(nx.average_neighbor_degree(self.G).values())
@@ -102,4 +102,3 @@ class Property:
             G = self.G
         G.remove_edges_from(G.selfloop_edges())
         return sorted(list((nx.core_number(G).values())))
-
