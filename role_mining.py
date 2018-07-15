@@ -30,7 +30,7 @@ for f in allFiles:
     data_file = input_folder+f #Read each input file
     feature_file = temp_folder+"Properties"+ f.split('.')[0] +".csv"
     feature_data = pd.read_csv(feature_file,delimiter=',',usecols=[0,1,2,3,4,5,6])
-    features = feature_data[[1,2,3,4,5,6]].as_matrix()
+    features = feature_data[['indegree','outdegree','average_neighbor_degree','triangles','clustering_coefficient','kCore']].as_matrix()
     data = scale(features)
     n_samples, n_features = data.shape
 
